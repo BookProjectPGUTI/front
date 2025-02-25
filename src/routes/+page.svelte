@@ -1,59 +1,76 @@
 <script lang="ts">
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcomeFallback from '$lib/images/svelte-welcome.png';
-</script>
-
-<svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
-</svelte:head>
-
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcomeFallback} alt="Welcome" />
-			</picture>
-		</span>
-
-		to your new<br />SvelteKit app
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
-</section>
-
-<style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
+	import { onMount } from "svelte";
+  </script>
+  
+  <main class="container">
+	<nav class="menu">
+	  <a href="/" class="menu-item">Главная</a>
+	  <a href="/exchange" class="menu-item">Начать обмен</a>
+	  <a href="/my-exchanges" class="menu-item">Мои обмены</a>
+	  <a href="/faq" class="menu-item">Задать вопрос</a>
+	</nav>
+  
+	<section class="content">
+	  <p>Описание приложения, правила обмена, чем интересно - "сюрприз"...</p>
+	</section>
+  </main>
+  
+  <style>
+	.container {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  padding: 20px;
 	}
-
-	h1 {
-		width: 100%;
+  
+	.header {
+	  display: flex;
+	  justify-content: space-between;
+	  width: 100%;
+	  max-width: 1200px;
+	  padding: 10px;
+	  background: #f0f0f0;
+	  border-radius: 10px;
+	  margin-bottom: 20px;
 	}
-
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
+  
+	.logo {
+	  font-size: 20px;
+	  font-weight: bold;
 	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
+  
+	.nav a {
+	  margin-left: 15px;
+	  text-decoration: none;
+	  color: #333;
 	}
-</style>
+  
+	.menu {
+	  display: flex;
+	  gap: 10px;
+	  margin-bottom: 20px;
+	}
+  
+	.menu-item {
+	  padding: 10px 15px;
+	  background: rgb(42, 45, 47); /* Цвет фона кнопок */
+	  border-radius: 8px;
+	  text-decoration: none;
+	  color:  rgba(173, 166, 156, 1); /* Цвет текста на кнопках */
+	}
+  
+	.menu-item:hover {
+	  background: rgb(50, 53, 55); /* Цвет фона кнопок при наведении */
+	}
+  
+	.content {
+	  background: rgb(42, 45, 47); /* Цвет фона описания */
+	  color:  rgba(173, 166, 156, 1); /* Цвет текста в блоке с описанием */
+	  padding: 20px;
+	  border-radius: 10px;
+	  max-width: 800px;
+	  width: 100%;
+	  text-align: center;
+	}
+  </style>
+  

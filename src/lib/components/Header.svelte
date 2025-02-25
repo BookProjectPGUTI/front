@@ -1,47 +1,51 @@
 <script lang="ts">
-    import { goto } from "$app/navigation";
-  </script>
+  import Login from "$lib/components/Login.svelte";
   
-  <style>
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #007bff;
-      padding: 1rem 2rem;
-      color: white;
-    }
-  
-    .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  
-    .nav-links {
-      display: flex;
-      gap: 1rem;
-    }
-  
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      transition: background 0.3s;
-    }
-  
-    .nav-links a:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-  </style>
-  
-  <header class="header">
-    <div class="logo" on:click={() => goto("/")}>🔥 MyApp</div>
-    <nav class="nav-links">
-      <a href="/login">Войти</a>
-      <a href="/signup">Регистрация</a>
-    </nav>
-  </header>
-  
+  import { writable } from "svelte/store";
+
+  let isLoginOpen = writable(false);
+</script>
+
+<header>
+  <div class="logo">Логотип</div>
+  <nav>
+    <a href="/">Главная</a>
+    <a href="/signup">Регистрация</a>
+    <button on:click={() => isLoginOpen.set(true)}>Войти</button>
+  </nav>
+</header>
+
+<Login bind:isOpen={isLoginOpen} />
+
+<style>
+  header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(24, 26, 27, 1);  /* Ваш желаемый цвет фона */
+    color: rgba(173, 166, 156, 1);    /* Цвет текста */
+    border-radius: 10px;
+  }
+
+  a {
+    text-decoration: none;
+    color: rgba(173, 166, 156, 1);  /* Цвет ссылок */
+    margin: 0 1rem;
+    font-size: 1.1rem;
+  }
+
+  button {
+    background-color: rgba(0, 86, 179);  /* Цвет кнопки */
+    color: rgba(18,18,18);
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: rgba(173, 166, 156, 0.8);  /* Темнее при наведении */
+  }
+</style>

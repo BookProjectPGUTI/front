@@ -9,8 +9,8 @@
   let usernameError = writable<string>("");
   let passwordError = writable<string>("");
   let showPopup = writable<boolean>(false);
+  let successMessage = writable<string>("");
 
-  // Валидация email
   const validateEmailFormat = (email: string): string => {
     if (!email.trim()) return 'Поле email не может быть пустым.';
     const invalidCharsRegex = /[^a-zA-Z0-9._@-]/;
@@ -29,19 +29,22 @@
     }
     if (!domainPart.includes('.')) return 'Доменная часть должна содержать хотя бы одну точку.';
     if (domainPart.includes('..')) return 'Доменная часть не может содержать две точки подряд.';
-    return ''; // Почта валидна
+    return '';
   };
 
   const validateUsername = (username: string): string => {
     if (!username.trim()) return 'Никнейм не может быть пустым.';
     if (username.length < 3) return 'Никнейм должен содержать минимум 3 символа.';
-    return ''; // Никнейм валиден
+    return '';
   };
 
   const validatePassword = (password: string): string => {
     if (!password.trim()) return 'Пароль не может быть пустым.';
-    if (password.length < 6) return 'Пароль должен содержать минимум 6 символов.';
-    return ''; // Пароль валиден
+    if (/[а-яА-ЯёЁ]/.test(password)) return "Пароль не должен содержать кириллицу.";
+    if (password.length < 8) return "Пароль должен содержать минимум 8 символов.";
+    if (!/[A-Z]/.test(password)) return "Пароль должен содержать хотя бы одну заглавную букву.";
+    if (!/[0-9]/.test(password)) return "Пароль должен содержать хотя бы одну цифру.";
+    return '';
   };
 
   const handleEmailInput = () => {
@@ -62,24 +65,19 @@
   const handleSubmit = async (event: Event): Promise<void> => {
     event.preventDefault();
 
-    // Валидация email
     const emailValidationError = validateEmailFormat(email);
     emailError.set(emailValidationError);
 
-    // Валидация username
     const usernameValidationError = validateUsername(username);
     usernameError.set(usernameValidationError);
 
-    // Валидация password
     const passwordValidationError = validatePassword(password);
     passwordError.set(passwordValidationError);
 
-    // Если есть ошибки, останавливаем отправку формы
     if (emailValidationError || usernameValidationError || passwordValidationError) {
       return;
     }
 
-    // Если все поля валидны, отправляем форму
     const payload = { email, username, password };
 
     try {
@@ -89,12 +87,25 @@
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Ошибка регистрации");
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Ошибка сервера: получен некорректный ответ.");
+      }
 
-      alert("Регистрация прошла успешно. Подтвердите почту");
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.detail === "Username already exists") {
+          usernameError.set("Такой никнейм уже существует.");
+        } else {
+          throw new Error(data.detail || "Ошибка регистрации.");
+        }
+        showPopup.set(true);
+        return;
+      }
+
+      successMessage.set("Сообщение с подтверждением отправлено на вашу почту!");
     } catch (err: any) {
-      error.set(err.message); // Показываем ошибку под полем email
+      error.set(err.message); 
     }
   };
 </script>

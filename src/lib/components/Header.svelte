@@ -7,9 +7,9 @@
 </script>
 
 <header>
-  <div class="logo">Логотип</div>
+  <a href="/"> <div class="logo" >Логотип</div></a> 
   <nav>
-    <a href="/">Главная</a>
+    
     <a href="/signup">Регистрация</a>
     <button on:click={() => isLoginOpen.set(true)}>Войти</button>
   </nav>

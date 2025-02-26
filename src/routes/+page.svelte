@@ -7,7 +7,7 @@
 	  <a href="/" class="menu-item">Главная</a>
 	  <a href="/exchange" class="menu-item">Начать обмен</a>
 	  <a href="/my-exchanges" class="menu-item">Мои обмены</a>
-	  <a href="/faq" class="menu-item">Задать вопрос</a>
+	
 	</nav>
   
 	<section class="content">

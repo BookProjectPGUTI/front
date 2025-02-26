@@ -1,5 +1,6 @@
 <script lang="ts">
   import { writable } from "svelte/store";
+  import { navigate } from 'svelte-routing'; // Импортируем для перенаправления
 
   export let isOpen = writable(false);
   let email: string = "";
@@ -8,6 +9,7 @@
   let showPopup = writable<boolean>(false);
   let popupMessage = writable<string>("");
   let emailTouched = writable<boolean>(false); // флаг для отслеживания ввода
+  let passwordTouched = writable<boolean>(false); // флаг для отслеживания ввода пароля
 
   // Функция для проверки email
   const validateEmail = (email: string): string => {
@@ -16,10 +18,28 @@
       return 'Почта должна содержать только английские символы, цифры, точки, дефисы и подчеркивания.';
     }
     if (!email.includes('@')) return 'Отсутствует символ @.';
+    
     const [localPart, domainPart] = email.split('@');
     if (!localPart) return 'Локальная часть адреса не может быть пустой.';
     if (!domainPart) return 'Отсутствует доменная часть в почтовом адресе.';
+    
+    // Проверка домена на наличие точки и минимум двух символов после неё
+    const domainParts = domainPart.split('.');
+    if (domainParts.length < 2 || domainParts[1].length < 2) {
+      return "Некорректный формат домена (пример: example.com).";
+    }
+    
     return '';  // Почта валидна
+  };
+
+  // Функция валидации пароля
+  const validatePasswordFormat = (password: string): string => {
+    if (!password.trim()) return ""; 
+    if (/[а-яА-ЯёЁ]/.test(password)) return "Пароль не должен содержать кириллицу.";
+    if (password.length < 8) return "Пароль должен содержать минимум 8 символов.";
+    if (!/[A-Z]/.test(password)) return "Пароль должен содержать хотя бы одну заглавную букву.";
+    if (!/[0-9]/.test(password)) return "Пароль должен содержать хотя бы одну цифру.";
+    return ""; // Убираем "Неудовлетворительный пароль"
   };
 
   // Обработчик формы
@@ -28,36 +48,79 @@
     popupMessage.set("");
     showPopup.set(true);
 
-    const validationError = validateEmail(email);
-    if (validationError) {
-      popupMessage.set(validationError);
+    // Валидация email
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      popupMessage.set(emailValidationError);
+      return;
+    }
+
+    // Валидация пароля
+    const passwordValidationError = validatePasswordFormat(password);
+    if (passwordValidationError) {
+      popupMessage.set(passwordValidationError);
       return;
     }
 
     try {
-      const response = await fetch("/v1/api/login", {
+      const response = await fetch("/v1/api/sign-in", {  // Запрос на вход
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Ошибка входа");
 
-      popupMessage.set("Вы успешно вошли!");
+      if (!response.ok) {
+        // Обработка ошибки, если данные не прошли проверку
+        if (response.status === 404) {
+          popupMessage.set("Пользователь с таким никнеймом не найден.");
+        } else if (response.status === 403) {
+          popupMessage.set("Пользователь ещё не подтвердил почту.");
+        } else if (data.detail) {
+          popupMessage.set(data.detail);  // Отображаем сообщение об ошибке с сервера
+        } else {
+          popupMessage.set("Ошибка входа. Попробуйте еще раз.");
+        }
+      } else {
+        // Успешный вход
+        popupMessage.set("Вы успешно вошли!");
+        setTimeout(() => {
+          navigate("/"); // Перенаправление на главную страницу
+        }, 1000);
+      }
     } catch (err: any) {
-      popupMessage.set(err.message);
+      popupMessage.set(err.message || "Произошла ошибка при входе.");
     }
 
     setTimeout(() => showPopup.set(false), 3000);
   };
 
-  // Валидация при потере фокуса
+  // Валидация email при потере фокуса
   const validateOnBlur = () => {
     emailTouched.set(true); // Устанавливаем флаг, что поле было затронуто
-    const validationError = validateEmail(email);
-    if (validationError) {
-      popupMessage.set(validationError);
+    if (!email.trim()) {
+      popupMessage.set(""); // Если поле пустое, убираем сообщение об ошибке
+      showPopup.set(false); // Скрываем уведомление
+      return;
+    }
+
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      popupMessage.set(emailValidationError);
+      showPopup.set(true);
+    } else {
+      popupMessage.set(""); // Если ошибок нет
+      showPopup.set(false);
+    }
+  };
+
+  // Валидация пароля при потере фокуса
+  const validatePasswordOnBlur = () => {
+    passwordTouched.set(true); // Устанавливаем флаг, что поле было затронуто
+    const passwordValidationError = validatePasswordFormat(password);
+    if (passwordValidationError) {
+      popupMessage.set(passwordValidationError);
       showPopup.set(true);
     } else {
       popupMessage.set("");
@@ -65,7 +128,7 @@
     }
   };
 
-  // Валидация при вводе
+  // Валидация email при вводе
   const handleEmailInput = () => {
     if (!email.trim()) {
       popupMessage.set(""); // Если поле пустое, убираем сообщение об ошибке
@@ -73,10 +136,9 @@
       return;
     }
 
-    if (!$emailTouched) return; // Ошибка не показывается, пока поле не было затронуто
-    const validationError = validateEmail(email);
-    if (validationError) {
-      popupMessage.set(validationError);
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      popupMessage.set(emailValidationError);
       showPopup.set(true);
     } else {
       popupMessage.set("");
@@ -84,7 +146,25 @@
     }
   };
 
-  // Закрытие формы при клике вне её
+  // Валидация пароля при вводе
+  const handlePasswordInput = () => {
+    if (!password.trim()) {
+      popupMessage.set(""); // Если поле пустое, убираем сообщение об ошибке
+      showPopup.set(false); // Скрываем уведомление
+      return;
+    }
+
+    const passwordValidationError = validatePasswordFormat(password);
+    if (passwordValidationError) {
+      popupMessage.set(passwordValidationError);
+      showPopup.set(true);
+    } else {
+      popupMessage.set("");
+      showPopup.set(false);
+    }
+  };
+
+  // Закрытие формы при клике вне неё
   const handleOutsideClick = (event: MouseEvent) => {
     const modal = document.querySelector(".form-wrapper");
     if (modal && !modal.contains(event.target as Node)) {
@@ -117,7 +197,14 @@
         </div>
         <div class="form-group">
           <label for="password">Пароль:</label>
-          <input type="password" id="password" bind:value={password} required />
+          <input 
+            type="password" 
+            id="password" 
+            bind:value={password} 
+            required 
+            on:blur={validatePasswordOnBlur}
+            on:input={handlePasswordInput}
+          />
         </div>
 
         <button type="submit">Войти</button>
@@ -157,14 +244,14 @@
 
   /* Переместил popup внутрь формы, под заголовок */
   .popup {
-    background: rgba(26, 28, 29); /* Цвет фона уведомления */
-    color: rgba(173, 166, 156); /* Цвет текста уведомления */
-    padding: 10px 20px;
+    background: rgba(26, 28, 29);
+    color: rgba(255, 91, 91, 1);
+    padding: 12px 20px;
     border-radius: 6px;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
     font-weight: 600;
     text-align: center;
-    margin-bottom: 1rem; /* Отступ вниз */
+    margin-bottom: 1rem;
     display: none;
   }
 
@@ -196,7 +283,7 @@
     padding: 0.7rem;
     border: none;
     background: #007bff; /* Цвет кнопки */
-    color: rgba(18,18,18); /* Цвет текста на кнопке */
+    color: rgb(0, 0, 0); /* Цвет текста на кнопке */
     font-size: 1rem;
     border-radius: 5px;
     cursor: pointer;

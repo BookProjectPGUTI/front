@@ -21,3 +21,9 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+.git
+.gitignore
+.dockerignore
+node_modules
+README.md

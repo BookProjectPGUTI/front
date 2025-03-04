@@ -1,7 +1,5 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
-	import '../app.css';
-	import "../global.css"; // Импортируем глобальные стили
   </script>
   
   <div class="app">
@@ -40,10 +38,6 @@
 	  justify-content: center;
 	  align-items: center;
 	  padding: 12px;
-	}
-  
-	footer a {
-	  font-weight: bold;
 	}
   
 	@media (min-width: 480px) {

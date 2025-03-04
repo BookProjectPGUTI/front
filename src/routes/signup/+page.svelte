@@ -47,67 +47,66 @@
     return '';
   };
 
-  const handleEmailInput = () => {
-    const validationError = validateEmailFormat(email);
-    emailError.set(validationError);
-  };
+const handleEmailInput = () => {
+  const validationError = validateEmailFormat(email);
+  emailError.set(validationError);
+};
 
-  const handleUsernameInput = () => {
-    const validationError = validateUsername(username);
-    usernameError.set(validationError);
-  };
+const handleUsernameInput = () => {
+  const validationError = validateUsername(username);
+  usernameError.set(validationError);
+};
 
-  const handlePasswordInput = () => {
-    const validationError = validatePassword(password);
-    passwordError.set(validationError);
-  };
+const handlePasswordInput = () => {
+  const validationError = validatePassword(password);
+  passwordError.set(validationError);
+};
 
-  const handleSubmit = async (event: Event): Promise<void> => {
-    event.preventDefault();
+const handleSubmit = async (event: Event): Promise<void> => {
+  event.preventDefault();
 
-    const emailValidationError = validateEmailFormat(email);
-    emailError.set(emailValidationError);
+  const emailValidationError = validateEmailFormat(email);
+  emailError.set(emailValidationError);
 
-    const usernameValidationError = validateUsername(username);
-    usernameError.set(usernameValidationError);
+  const usernameValidationError = validateUsername(username);
+  usernameError.set(usernameValidationError);
 
-    const passwordValidationError = validatePassword(password);
-    passwordError.set(passwordValidationError);
+  const passwordValidationError = validatePassword(password);
+  passwordError.set(passwordValidationError);
 
-    if (emailValidationError || usernameValidationError || passwordValidationError) {
+  if (emailValidationError || usernameValidationError || passwordValidationError) {
+    return;
+  }
+
+  const payload = { email, username, password };
+
+  try {
+    const response = await fetch('http://localhost:8000/api/v1/auth/sign-up', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      if (data.detail === "Username already exists") {
+        usernameError.set("Такой никнейм уже существует.");
+      } else if (data.detail === "Email already exists") {
+        emailError.set("Такая почта уже зарегистрирована.");
+      } else {
+        throw new Error(data.detail || "Ошибка регистрации.");
+      }
+      showPopup.set(true);
       return;
     }
 
-    const payload = { email, username, password };
-
-    try {
-      const response = await fetch("/v1/api/sign-up", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Ошибка сервера: получен некорректный ответ.");
-      }
-
-      const data = await response.json();
-      if (!response.ok) {
-        if (data.detail === "Username already exists") {
-          usernameError.set("Такой никнейм уже существует.");
-        } else {
-          throw new Error(data.detail || "Ошибка регистрации.");
-        }
-        showPopup.set(true);
-        return;
-      }
-
-      successMessage.set("Сообщение с подтверждением отправлено на вашу почту!");
-    } catch (err: any) {
-      error.set(err.message); 
-    }
-  };
+    const data = await response.json();
+    successMessage.set("Сообщение с подтверждением отправлено на вашу почту!");
+  } catch (err: any) {
+    error.set(err.message);
+    showPopup.set(true);
+  }
+};
 </script>
 
 <style>

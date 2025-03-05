@@ -1,5 +1,6 @@
 <script lang="ts">
   import { writable } from "svelte/store";
+  import { fetchWithRefresh } from '$lib/auth';
   
   let email: string = "";
   let username: string = "";
@@ -81,7 +82,7 @@
     const payload = { email, username, password };
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/sign-up', {
+      const response = await fetchWithRefresh('http://localhost:8000/api/v1/auth/sign-up', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -100,6 +101,7 @@
         return;
       }
 
+      error.set("");
       const data = await response.json();
       successMessage.set("Сообщение с подтверждением отправлено на вашу почту. Пожалуйста, проверьте вашу почту и подтвердите регистрацию.");
     } catch (err: any) {

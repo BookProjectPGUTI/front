@@ -1,14 +1,17 @@
 <script lang="ts">
   import { writable } from "svelte/store";
+  import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth'; // Импортируем функции
 
   export let isOpen = writable(false);
+  export let user = writable<{ id: string; username: string; email: string } | null>(null);
+
   let username: string = "";
   let password: string = "";
   let error = writable<string>("");
   let showPopup = writable<boolean>(false);
-  let popupMessage = writable<string>("");
   let usernameError = writable<string>("");
   let passwordError = writable<string>("");
+  let successMessage = writable<string>("");
 
   const validateUsername = (username: string): string => {
     if (!username.trim()) return 'Поле Никнейм не может быть пустым.';
@@ -38,34 +41,56 @@
     usernameError.set(usernameValidationError);
     passwordError.set(passwordValidationError);
 
-    if (usernameValidationError || passwordValidationError) {
-      popupMessage.set("Пожалуйста, исправьте ошибки в форме.");
-      showPopup.set(true);
-      return;
-    }
-
     try {
-      const response = await fetch("/v1/api/login", {
+      const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        credentials: "include",
       });
+
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error("Ошибка сервера: получен некорректный ответ.");
       }
+
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || "Ошибка входа");
+        switch (response.status) {
+          case 401:
+            throw new Error(data.details || "Неверные данные для входа.");
+          case 403:
+            throw new Error(data.details || "Почта пользователя не подтверждена.");
+          case 404:
+            throw new Error(data.details || "Пользователь не найден.");
+          case 422:
+            const validationErrors = data.detail.map((err: any) => err.msg).join(", ");
+            throw new Error(`Ошибка валидации: ${validationErrors}`);
+          default:
+            throw new Error("Ошибка входа");
+        }
+      }
+      
+      error.set("");
+      successMessage.set("Вы успешно вошли!");
+      showPopup.set(true);
+      user.set(data); // Обновляем данные пользователя
+
+      // Запускаем таймер для обновления токена
+      const exp = getTokenExpiration(data.accessToken);
+      if (exp) {
+        scheduleTokenRefresh(exp);
       }
 
-      popupMessage.set("Вы успешно вошли!");
-      showPopup.set(true);
+      setTimeout(() => {
+        isOpen.set(false);
+      }, 1000);
+      
     } catch (err: any) {
-      popupMessage.set(err.message);
+      error.set(err.message);
       showPopup.set(true);
     }
-
   };
 
   const handleOutsideClick = (event: MouseEvent) => {
@@ -82,22 +107,29 @@
   <div class="modal" on:click={handleOutsideClick}>
     <div class="form-wrapper">
       <h2>Вход</h2>
-      {#if $showPopup}
-        <div class="popup show">{$popupMessage}</div>
+      {#if $error}
+        <div class="centralerror show">{$error}</div>
+      {/if}
+      {#if $successMessage}
+        <div class="success-message">{$successMessage}</div>
       {/if}
       <form on:submit={handleSubmit} novalidate>
         <div class="form-group">
           <label for="username">Никнейм:</label>
           <input type="text" id="username" bind:value={username} required on:input={handleUsernameInput} />
           {#if $usernameError}
-            <div class="error-message show">{$usernameError}</div>
+            <div class="error-message show">
+              {$usernameError}
+            </div>
           {/if}
         </div>
         <div class="form-group">
           <label for="password">Пароль:</label>
           <input type="password" id="password" bind:value={password} required on:input={handlePasswordInput} />
           {#if $passwordError}
-            <div class="error-message show">{$passwordError}</div>
+            <div class="error-message show">
+              {$passwordError}
+            </div>
           {/if}
         </div>
         <button type="submit">Войти</button>
@@ -107,6 +139,23 @@
 {/if}
 
 <style>
+  .success-message {
+    color: #4caf50;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    text-align: center;
+  }
+  
+  .centralerror {
+    color: #ff6b6b;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    text-align: center;
+  }
+  .centralerror.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
   .error-message {
     color: #ff6b6b;
     font-size: 0.875rem;
@@ -115,6 +164,9 @@
     transform: translateY(-10px);
     transition: opacity 0.3s ease, transform 0.3s ease;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .error-message.show {
@@ -149,22 +201,6 @@
 
   h2 {
     margin-bottom: 0.5rem;
-  }
-
-  .popup {
-    background: rgba(26, 28, 29);
-    color: rgba(173, 166, 156);
-    padding: 10px 20px;
-    border-radius: 6px;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .popup.show {
-    display: block;
   }
 
   .form-group {

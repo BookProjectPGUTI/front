@@ -81,21 +81,18 @@
     const payload = { email, username, password };
 
     try {
-      const response = await fetch("/v1/api/sign-up", {
+      const response = await fetch('http://localhost:8000/api/v1/auth/sign-up', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Ошибка сервера: получен некорректный ответ.");
-      }
-
-      const data = await response.json();
       if (!response.ok) {
+        const data = await response.json();
         if (data.detail === "Username already exists") {
           usernameError.set("Такой никнейм уже существует.");
+        } else if (data.detail === "Email already exists") {
+          emailError.set("Такая почта уже зарегистрирована.");
         } else {
           throw new Error(data.detail || "Ошибка регистрации.");
         }
@@ -103,9 +100,11 @@
         return;
       }
 
-      successMessage.set("Сообщение с подтверждением отправлено на вашу почту!");
+      const data = await response.json();
+      successMessage.set("Сообщение с подтверждением отправлено на вашу почту. Пожалуйста, проверьте вашу почту и подтвердите регистрацию.");
     } catch (err: any) {
-      error.set(err.message); 
+      error.set(err.message);
+      showPopup.set(true);
     }
   };
 </script>
@@ -153,6 +152,13 @@
     transform: translateY(0);
   }
 
+  .success-message {
+    color: #4caf50;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    text-align: center;
+  }
+
   label {
     display: block;
     font-weight: bold;
@@ -191,6 +197,9 @@
     <h2>Регистрация</h2>
     {#if $error}
       <div class="error-message show">{$error}</div>
+    {/if}
+    {#if $successMessage}
+      <div class="success-message">{$successMessage}</div>
     {/if}
     <form on:submit={handleSubmit} novalidate>
       <div class="form-group">

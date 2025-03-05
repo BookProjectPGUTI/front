@@ -77,14 +77,14 @@
 </script>
 
 {#if $isOpen}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div class="modal" on:click={handleOutsideClick}>
     <div class="form-wrapper">
       <h2>Вход</h2>
-
       {#if $showPopup}
         <div class="popup show">{$popupMessage}</div>
       {/if}
-
       <form on:submit={handleSubmit} novalidate>
         <div class="form-group">
           <label for="username">Никнейм:</label>

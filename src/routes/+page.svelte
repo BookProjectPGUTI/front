@@ -22,28 +22,6 @@
 	  padding: 20px;
 	}
   
-	.header {
-	  display: flex;
-	  justify-content: space-between;
-	  width: 100%;
-	  max-width: 1200px;
-	  padding: 10px;
-	  background: #f0f0f0;
-	  border-radius: 10px;
-	  margin-bottom: 20px;
-	}
-  
-	.logo {
-	  font-size: 20px;
-	  font-weight: bold;
-	}
-  
-	.nav a {
-	  margin-left: 15px;
-	  text-decoration: none;
-	  color: #333;
-	}
-  
 	.menu {
 	  display: flex;
 	  gap: 10px;

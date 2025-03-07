@@ -15,7 +15,23 @@ export const isTokenExpired = (token: string): boolean => {
 
 export const getTokenExpiration = (token: string): number | null => {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1])); 
+    if (!token || typeof token !== "string") {
+      console.error("Токен отсутствует или имеет неверный формат:", token);
+      return null;
+    }
+
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error("Токен имеет неверный формат (ожидается 3 части):", token);
+      return null;
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload || !payload.exp) {
+      console.error("Payload токена не содержит expiration time (exp):", payload);
+      return null;
+    }
+
     return payload.exp * 1000; 
   } catch (err) {
     console.error("Ошибка при декодировании токена:", err);
@@ -52,7 +68,7 @@ export const fetchWithRefresh = async (url: string, options: RequestInit = {}): 
     credentials: "include", 
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && !url.includes("/auth/sign-in")) {
     const newTokens = await refreshTokens();
 
     if (newTokens) {
@@ -61,7 +77,7 @@ export const fetchWithRefresh = async (url: string, options: RequestInit = {}): 
         credentials: "include",
       });
     } else {
-      window.location.href = "/login";
+      window.location.href = "/";
     }
   }
 
@@ -86,13 +102,16 @@ export const scheduleTokenRefresh = (exp: number) => {
         }
       }
     }, delay);
+  } else {
+    console.warn("Токен уже истек или истечет менее чем через 5 минут.");
+    refreshTokens();
   }
 };
 
-// Очистка таймера
 export const clearRefreshTimer = () => {
   if (refreshTimer) {
-    clearTimeout(refreshTimer); // Очищаем таймер
+    clearTimeout(refreshTimer); 
     refreshTimer = null;
   }
 };
+

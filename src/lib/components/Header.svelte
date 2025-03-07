@@ -10,14 +10,14 @@
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
         method: "GET",
-        credentials: "include", // Отправляем куки
+        credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
-        user.set(data); // Устанавливаем данные пользователя
+        user.set(data); 
       } else {
-        user.set(null); // Очищаем данные пользователя, если запрос неуспешен
+        user.set(null);
       }
     } catch (err) {
       console.error("Ошибка при проверке авторизации:", err);
@@ -31,8 +31,8 @@
       });
 
       if (response.status === 204) {
-        user.set(null); // Очищаем данные пользователя
-        clearRefreshTimer(); // Очищаем таймер
+        user.set(null); 
+        clearRefreshTimer();
       } else {
         const data = await response.json();
         throw new Error(data.details || "Ошибка при выходе из аккаунта.");
@@ -64,20 +64,20 @@
     display: flex;
     justify-content: space-between;
     padding: 10px 20px;
-    background: rgba(24, 26, 27, 1);  /* Ваш желаемый цвет фона */
-    color: rgba(173, 166, 156, 1);    /* Цвет текста */
+    background: rgba(24, 26, 27, 1);  
+    color: rgba(173, 166, 156, 1);  
     border-radius: 10px;
   }
 
   a {
     text-decoration: none;
-    color: rgba(173, 166, 156, 1);  /* Цвет ссылок */
+    color: rgba(173, 166, 156, 1); 
     margin: 0 1rem;
     font-size: 1.1rem;
   }
 
   button {
-    background-color: rgba(0, 86, 179);  /* Цвет кнопки */
+    background-color: rgba(0, 86, 179);
     color: rgba(18,18,18);
     border: none;
     padding: 0.5rem 1rem;
@@ -88,6 +88,6 @@
   }
 
   button:hover {
-    background-color: rgba(173, 166, 156, 0.8);  /* Темнее при наведении */
+    background-color: rgba(173, 166, 156, 0.8);
   }
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { writable } from "svelte/store";
-  import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth'; // Импортируем функции
-
+  import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth';
+  import { goto } from '$app/navigation';
   export let isOpen = writable(false);
   export let user = writable<{ id: string; username: string; email: string } | null>(null);
 
@@ -41,12 +41,16 @@
     usernameError.set(usernameValidationError);
     passwordError.set(passwordValidationError);
 
+    if (usernameValidationError || passwordValidationError) {
+      return;
+    }
+
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: "include",
+        credentials: "include", 
       });
 
       const contentType = response.headers.get("content-type");
@@ -71,22 +75,18 @@
             throw new Error("Ошибка входа");
         }
       }
-      
+
+      successMessage.set("");
       error.set("");
       successMessage.set("Вы успешно вошли!");
       showPopup.set(true);
-      user.set(data); // Обновляем данные пользователя
-
-      // Запускаем таймер для обновления токена
-      const exp = getTokenExpiration(data.accessToken);
-      if (exp) {
-        scheduleTokenRefresh(exp);
-      }
-
+      user.set(data); 
       setTimeout(() => {
         isOpen.set(false);
       }, 1000);
-      
+      goto('/');
+
+
     } catch (err: any) {
       error.set(err.message);
       showPopup.set(true);

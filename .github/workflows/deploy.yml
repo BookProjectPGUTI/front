@@ -23,5 +23,7 @@ jobs:
         run: |
           ssh -i $HOME/.ssh/key -o StrictHostKeyChecking=no ${{ secrets.server_user }}@${{ secrets.server_ip }} \
           "cd ~/book_project/front && 
-          git pull && docker compose down front && 
+          git pull && 
+          cd ~/book_project/back && 
+          docker compose down front && 
           docker compose up -d --build --remove-orphans"

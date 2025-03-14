@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { type Writable } from "svelte/store";
   import WantToExchangeForm from "./WantToExchangeForm.svelte";
   import ExchangeForm from "./ExchangeForm.svelte";
-
-  export let showReceiveForm: Writable<string>;
+  import { writable } from "svelte/store";
+  
+  let currentForm = writable("exchange"); // Начальная форма - exchange
   export let close: () => void;
-  export let showForm: (formName: string) => void; // ✅ Получаем из main.svelte
+  export let bookData: { [key: string]: string } | null = null;
 
   // Загружаем жанры через API
   let genres: string[] = [];
   let selectedGenres: string[] = [];
-  let bookData: { [key: string]: string } | null = null;
+  
 
   async function fetchGenres() {
     try {
@@ -51,29 +51,29 @@
     }
   };
 
-  // Функция для возврата на форму "WantToExchangeForm"
-  const goBackToWantToExchangeForm = () => {
-    fetchBookData(); // Загружаем данные книги
-    showForm("WantToExchangeForm");
+  const openWantToExchangeForm = () => {
+    currentForm.set("wantToExchange");
+    console.log('openWantToExchangeForm:', $currentForm);
+  };
+
+  const openExchangeForm = () => {
+    currentForm.set("exchange");
+    console.log('openExchangeForm:', $currentForm);
+  };
+  
+  const openReceiveForm = () => {
+    currentForm.set("receive");
+    console.log('openReceiveForm:', $currentForm);
   };
 </script>
 
 <div class="form-container">
   <div class="button-group">
-    <!-- Кнопка для перехода в WantToExchangeForm -->
-    <button class="start-exchange-btn" on:click={() => showForm("WantToExchangeForm")}>
-      Хочу обменять
-    </button>
-
-    <!-- Кнопка для перехода в ExchangeForm -->
-    <button class="start-exchange-btn" on:click={() => showForm("ExchangeForm")}>
-      Адрес доставки
-    </button>
+    <button class="start-exchange-btn" on:click={openWantToExchangeForm}>Хочу обменять</button>
+    <button class="start-exchange-btn" on:click={openExchangeForm}>Адрес</button>
   </div>
 
   <h2>Выберите жанры</h2>
-  <button class="close-btn" on:click={close}>×</button>
-
   <div class="form-content">
     <div class="genre-list">
       {#each genres as genre}
@@ -86,16 +86,17 @@
   </div>
 
   <button class="submit-btn" on:click={submitGenres}>Далее</button>
-  <button class="back-btn" on:click={goBackToWantToExchangeForm}>
-    Назад
-  </button>
 </div>
 
-{#if $showReceiveForm === "WantToExchangeForm"}
-  <WantToExchangeForm close={close} bookData={bookData} />
+{#if $currentForm === "wantToExchange"}
+  <WantToExchangeForm close={close}
+  openExchangeForm={openExchangeForm}
+  openReceiveForm={openReceiveForm}
+  showWantToExchangeForm={true}  
+  bookData={bookData}/>
 {/if}
 
-{#if $showReceiveForm === "ExchangeForm"}
+{#if $currentForm === "exchange"}
   <ExchangeForm close={close} />
 {/if}
 

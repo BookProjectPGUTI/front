@@ -2,8 +2,8 @@
   export let close: () => void; // Функция для закрытия формы
   export let openExchangeForm: () => void; // Функция для открытия формы обмена
   export let openReceiveForm: () => void; // Функция для открытия формы получения
-  export let showWantToExchangeForm: boolean; // Состояние для показа формы
-  export let bookData: { [key: string]: string } | null = null;
+  export let showWantToExchangeForm: boolean = false;  // Значение по умолчанию
+  export let bookData: { [key: string]: string } | null = null; // Можно не передавать
   let authorName: string = "";
   let bookTitle: string = "";
   let isbn: string = "";

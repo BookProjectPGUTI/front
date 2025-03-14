@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { writable } from "svelte/store";
+	import { type Writable } from "svelte/store";
 	import WantToExchangeForm from "../lib/ui/forms/WantToExchangeForm.svelte";
 	import ExchangeForm from "../lib/ui/forms/ExchangeForm.svelte";
 	import ReceiveForm from "$lib/ui/forms/ReceiveForm.svelte"; // Импортируем ReceiveForm
-  
+	export let bookData: { [key: string]: string } | null;
 	// Состояние текущей формы
 	let currentForm: Writable<string> = writable(''); // Пустая строка означает отсутствие формы
-	let bookData: { [key: string]: string } | null = null;
+	
+	
   
 	// Функция для закрытия формы
 	const closeForm = () => {
@@ -17,18 +19,24 @@
   
 	// Функции для переключения форм
 	const openExchangeForm = () => {
+		closeForm();
+		console.log('Current form before openWantToExchangeForm:', $currentForm);
 	  currentForm.set('exchange');
 	  window.history.pushState({ form: "exchange" }, "Адрес доставки", "#exchange");
 	  console.log("Opened Exchange Form");
 	};
   
 	const openReceiveForm = () => {
+		closeForm();
+		console.log('Current form before openWantToExchangeForm:', $currentForm);
 	  currentForm.set('receive');
 	  window.history.pushState({ form: "receive" }, "Получение книги", "#receive");
 	  console.log("Opened Receive Form");
 	};
   
 	const openWantToExchangeForm = () => {
+		closeForm();
+		console.log('Current form before openWantToExchangeForm:', $currentForm);
 	  currentForm.set('wanttoexchange');
 	  window.history.pushState({ form: "wanttoexchange" }, "Хочу обменять", "#wanttoexchange");
 	  console.log("Opened WantToExchange Form");
@@ -72,22 +80,20 @@
 		close={closeForm} 
 		openExchangeForm={openExchangeForm}
 		openReceiveForm={openReceiveForm}
+		showWantToExchangeForm={true}
 	  />
 	{/if}
   
 	<!-- Показываем форму ExchangeForm, если состояние currentForm равно 'exchange' -->
 	{#if $currentForm === 'exchange'}
-	  <ExchangeForm close={closeForm} />
+	  <ExchangeForm close={closeForm} bookData={bookData} />
+	  
 	{/if}
   
 	<!-- Показываем форму ReceiveForm, если состояние currentForm равно 'receive' -->
 	{#if $currentForm === 'receive'}
-	  <ReceiveForm 
-		close={closeForm} 
-		showReceiveForm={currentForm}
-		bookData={bookData} 
-	  />
-	{/if}
+  <ReceiveForm close={closeForm} bookData={bookData} />
+{/if}
   </main>
   
   <style>

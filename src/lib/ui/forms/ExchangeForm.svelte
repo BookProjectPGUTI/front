@@ -2,7 +2,8 @@
   import { writable } from "svelte/store";
   import WantToExchangeForm from "./WantToExchangeForm.svelte";
   import ReceiveForm from "./ReceiveForm.svelte";
-
+  export let close: () => void;
+  export let bookData: { [key: string]: string } | null = null;
   // Используем writable store для состояния текущей формы
   let currentForm = writable("exchange"); // Возможные значения: "exchange", "wantToExchange", "receive"
 
@@ -18,16 +19,24 @@
   let patronymic = "";
 
   // Функции для переключения между формами
+  
   const openExchangeForm = () => {
-    currentForm.set("exchange");
+    currentForm.set("")
+    currentForm.set("exchange")
+    console.log(' openWantForm:', $currentForm);
+    
   };
-
   const openWantToExchangeForm = () => {
+    currentForm.set("")
     currentForm.set("wantToExchange");
+    console.log(' openWantForm:', $currentForm);
+    
   };
 
   const openReceiveForm = () => {
+    currentForm.set("")
     currentForm.set("receive");
+    console.log(' openReceiveForm:', $currentForm);
   };
 </script>
 
@@ -97,11 +106,16 @@
 {/if}
 
 {#if $currentForm === "wantToExchange"}
-  <WantToExchangeForm />
+  <WantToExchangeForm close={close}
+  
+    openExchangeForm={openExchangeForm}
+    openReceiveForm={openReceiveForm}
+    showWantToExchangeForm={true}  
+    bookData={bookData} />
 {/if}
 
 {#if $currentForm === "receive"}
-  <ReceiveForm />
+  <ReceiveForm close={close} />
 {/if}
 
 <style>

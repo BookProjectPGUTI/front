@@ -246,9 +246,10 @@
         </div>
       </div>
     </div>
-
+    
+    <button class="go-back-btn" on:click={handleSubmit}>Подтвердить данные</button>
     <button class="go-back-btn" on:click={openReceiveForm}>Назад</button>
-    <button class="go-back-btn" on:click={handleSubmit}>Далее</button>
+    
   </div>
 {/if}
 

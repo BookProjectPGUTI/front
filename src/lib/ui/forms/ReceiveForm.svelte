@@ -2,21 +2,26 @@
   import WantToExchangeForm from "./WantToExchangeForm.svelte";
   import ExchangeForm from "./ExchangeForm.svelte";
   import { writable } from "svelte/store";
-  
-  let currentForm = writable("exchange"); // Начальная форма - exchange
+
+  let currentForm = writable("receive"); 
   export let close: () => void;
   export let bookData: { [key: string]: string } | null = null;
+  export let selectedGenres: string[] = [];
+  export let updateGenres: (newGenres: string[]) => void;
 
   // Загружаем жанры через API
   let genres: string[] = [];
-  let selectedGenres: string[] = [];
-  
 
   async function fetchGenres() {
     try {
       const res = await fetch("v1/genres");
-      const data = await res.json();
-      genres = data;
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Не удалось получить список жанров");
+        }
+        throw new Error("Ошибка при загрузке жанров");
+      }
+      genres = await res.json();
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Неизвестная ошибка");
     }
@@ -27,14 +32,27 @@
   // Функция отправки жанров
   const submitGenres = async () => {
     try {
+      if (selectedGenres.length === 0) {
+        throw new Error("Ни один из жанров не был выбран");
+      }
+      
       const response = await fetch("v1/wish-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ genres: selectedGenres }),
       });
 
-      if (!response.ok) throw new Error("Не удалось сохранить жанры");
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error("Ни один из жанров не был выбран");
+        } else if (response.status === 401) {
+          throw new Error("Пользователь не авторизован");
+        }
+        throw new Error("Не удалось сохранить жанры");
+      }
+
       alert("Жанры успешно сохранены");
+      openExchangeForm();  // Переход к форме обмена после успешного сохранения
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Ошибка при сохранении жанров");
     }
@@ -44,8 +62,10 @@
   const fetchBookData = async () => {
     try {
       const res = await fetch("v1/books");
-      const data = await res.json();
-      bookData = data; // Заполняем bookData данными книги
+      if (!res.ok) {
+        throw new Error("Ошибка при получении данных книги");
+      }
+      bookData = await res.json();
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Ошибка при получении данных книги");
     }
@@ -57,7 +77,7 @@
   };
 
   const openExchangeForm = () => {
-    currentForm.set("exchange");
+    currentForm.set("exchange");  // Устанавливаем форму "Адрес"
     console.log('openExchangeForm:', $currentForm);
   };
   
@@ -65,12 +85,19 @@
     currentForm.set("receive");
     console.log('openReceiveForm:', $currentForm);
   };
+
+  // Функция для возврата на форму "Хочу обменять"
+  const goBackToWantToExchangeForm = async () => {
+    await fetchBookData();  // Получаем данные книги
+    openWantToExchangeForm(); // Переход к форме "Хочу обменять"
+  };
 </script>
 
+{#if $currentForm === "receive"}
 <div class="form-container">
   <div class="button-group">
     <button class="start-exchange-btn" on:click={openWantToExchangeForm}>Хочу обменять</button>
-    <button class="start-exchange-btn" on:click={openExchangeForm}>Адрес</button>
+    <button class="start-exchange-btn" on:click={openExchangeForm}>Адрес доставки</button>
   </div>
 
   <h2>Выберите жанры</h2>
@@ -86,7 +113,11 @@
   </div>
 
   <button class="submit-btn" on:click={submitGenres}>Далее</button>
+
+  <!-- Кнопка назад -->
+  <button class="back-btn" on:click={goBackToWantToExchangeForm}>Назад</button>
 </div>
+{/if}
 
 {#if $currentForm === "wantToExchange"}
   <WantToExchangeForm close={close}

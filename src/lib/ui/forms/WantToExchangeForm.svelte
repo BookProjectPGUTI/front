@@ -23,7 +23,14 @@
   const fetchGenres = async (): Promise<void> => {
     try {
       const response = await fetch("/v1/genres");
-      if (!response.ok) throw new Error("Не удалось получить список жанров");
+      if (!response.ok) {
+        if (response.status === 404) {
+          error = "Не удалось получить список жанров";
+        } else {
+          throw new Error("Неизвестная ошибка");
+        }
+        return;
+      }
       genres = (await response.json()).map((genre: { id: number; name: string }) => ({
         ...genre,
         selected: false,
@@ -34,10 +41,16 @@
     }
   };
 
-  // Функция для сохранения книги
+  // Функция для сохранения книги (обновление или создание новой)
   const saveBook = async (): Promise<void> => {
+    // Проверяем, что все обязательные поля заполнены
+    if (!authorName || !bookTitle || !isbn || !publicationYear) {
+      alert("Пожалуйста, заполните все поля.");
+      return;
+    }
+
     const selectedGenres = genres.filter((genre) => genre.selected).map((genre) => genre.id);
-    
+
     const bookData = {
       authorName,
       bookTitle,
@@ -64,13 +77,35 @@
         });
       }
 
-      if (!response.ok) throw new Error("Ошибка при сохранении книги");
+      if (!response.ok) {
+        if (response.status === 400) {
+          const data = await response.json();
+          if (data.detail === "Имя автора превышает разрешенное количество символов") {
+            error = "Имя автора превышает разрешенное количество символов";
+          } else if (data.detail === "Ни один из жанров не был выбран") {
+            error = "Ни один из жанров не был выбран";
+          } else {
+            throw new Error("Ошибка при сохранении книги");
+          }
+        } else if (response.status === 401) {
+          const data = await response.json();
+          error = data.detail === "Пользователь не авторизован" ? "Пользователь не авторизован" : "Неизвестная ошибка";
+        } else if (response.status === 409) {
+          const data = await response.json();
+          error = data.detail === "Такой номер ISBN уже зарегестрирован" ? "Такой номер ISBN уже зарегистрирован" : "Неизвестная ошибка";
+        } else {
+          throw new Error("Неизвестная ошибка");
+        }
+        return;
+      }
 
       const data = await response.json();
       bookId = data.id; // Сохраняем идентификатор книги для дальнейшего редактирования
 
       alert("Книга успешно сохранена!");
-      close(); // Закрыть форму
+
+      // Переходим на следующую форму "Хочу получить"
+      openReceiveForm(); // Открываем форму "Хочу получить"
     } catch (err) {
       error = (err as Error).message;
     }
@@ -155,7 +190,8 @@
       </div>
     </div>
   </div>
-   
+
+  <!-- Кнопка "Далее" для отправки данных -->
   <button class="save-btn" on:click={saveBook}>Далее</button>
 </div>
 
@@ -218,61 +254,49 @@
 
   .left-column,
   .right-column {
-    width: 48%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex: 1;
   }
 
   .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    margin-bottom: 10px;
   }
 
   .form-group label {
-    font-size: 14px;
+    font-weight: bold;
   }
 
   .form-group input {
+    width: 100%;
     padding: 8px;
-    border: 1px solid rgba(173, 166, 156, 0.5);
-    background: rgb(50, 53, 55);
-    color: rgba(173, 166, 156, 1);
     border-radius: 5px;
-    outline: none;
-    transition: border-color 0.2s;
+    border: 1px solid rgba(173, 166, 156, 0.3);
+    background: rgb(30, 33, 35);
+    color: rgba(173, 166, 156, 1);
   }
 
-  .form-group input:focus {
-    border-color: rgba(173, 166, 156, 1);
+  .right-column .form-group {
+    margin-top: 30px;
   }
 
   .fetch-genres-btn {
+    width: 100%;
     padding: 10px;
     background: rgb(42, 45, 47);
     color: rgba(173, 166, 156, 1);
     border: 1px solid rgba(173, 166, 156, 0.5);
     border-radius: 5px;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
   }
 
-  .fetch-genres-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
-  }
-
-  .categories-container {
-    max-height: 200px;
-    overflow-y: auto;
-    background: rgb(50, 53, 55);
-    padding: 10px;
-    border-radius: 5px;
+  .categories-container label {
+    display: block;
+    margin: 5px 0;
   }
 
   .error {
-    color: rgb(255, 0, 0);
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
   }
 
   .save-btn {
@@ -282,7 +306,6 @@
     border: 1px solid rgba(173, 166, 156, 0.5);
     border-radius: 5px;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
   }
 
   .save-btn:hover {

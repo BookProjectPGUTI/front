@@ -4,9 +4,11 @@
   import ReceiveForm from "./ReceiveForm.svelte";
   export let close: () => void;
   export let bookData: { [key: string]: string } | null = null;
-  // Используем writable store для состояния текущей формы
-  let currentForm = writable("exchange"); // Возможные значения: "exchange", "wantToExchange", "receive"
 
+  // Используем writable store для состояния текущей формы
+  let currentForm = writable("exchange");
+
+  // Стейт для формы
   let city = "";
   let street = "";
   let building = "";
@@ -18,25 +20,167 @@
   let firstName = "";
   let patronymic = "";
 
-  // Функции для переключения между формами
-  
-  const openExchangeForm = () => {
-    currentForm.set("")
-    currentForm.set("exchange")
-    console.log(' openWantForm:', $currentForm);
-    
-  };
-  const openWantToExchangeForm = () => {
-    currentForm.set("")
-    currentForm.set("wantToExchange");
-    console.log(' openWantForm:', $currentForm);
-    
+  // Стейт для жанров
+  let genres: string[] = [];
+  let selectedGenres: string[] = [];
+
+  // Стейт для адресов
+  let userAddresses: any[] = [];
+  let selectedAddress: any = null;
+
+  // Функция для обновления жанров
+  function updateGenres(newGenres: string[]) {
+    selectedGenres = newGenres;
+    console.log("Обновленные жанры:", selectedGenres);
+  }
+
+  // Функция для загрузки адресов пользователя
+  const loadUserAddresses = async () => {
+    try {
+      const res = await fetch("v1/users/addresses");
+      if (res.ok) {
+        const data = await res.json();
+        userAddresses = data || [];
+        console.log("Адреса пользователя:", userAddresses);
+        // Можно выбрать первый адрес как текущий
+        if (userAddresses.length > 0) {
+          selectedAddress = userAddresses[0]; // По умолчанию выберем первый адрес
+          city = selectedAddress.city || "";
+          street = selectedAddress.street || "";
+          building = selectedAddress.building || "";
+          house = selectedAddress.house || "";
+          apartment = selectedAddress.apartment || "";
+          zipCode = selectedAddress.zipCode || "";
+          isDefault = selectedAddress.isDefault || false;
+        }
+      } else {
+        handleError(res);
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Ошибка при загрузке адресов");
+    }
   };
 
-  const openReceiveForm = () => {
-    currentForm.set("")
+  // Функция для обработки ошибок
+  const handleError = (res: Response) => {
+    if (res.status === 401) {
+      alert("Пользователь не авторизован. Пожалуйста, войдите в систему.");
+      // Можно перенаправить на страницу авторизации
+      window.location.href = "/login";
+    } else if (res.status === 404) {
+      alert("Пользователь не найден.");
+    } else {
+      alert("Произошла ошибка. Попробуйте еще раз.");
+    }
+  };
+
+  // Функция для отправки данных пользователя и адреса
+  const handleSubmit = async () => {
+    if (!city || !street || !building || !house || !apartment || !zipCode || !lastName || !firstName || !patronymic) {
+      alert("Пожалуйста, заполните все поля.");
+      return;
+    }
+
+    // Подготовка данных для PUT и POST запросов
+    const userData = {
+      lastName,
+      firstName,
+      patronymic,
+    };
+
+    const addressData = {
+      city,
+      street,
+      building,
+      house,
+      apartment,
+      zipCode,
+      isDefault,
+    };
+
+    try {
+      // Отправка PUT запроса для обновления ФИО
+      const userRes = await fetch("v1/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!userRes.ok) {
+        handleError(userRes);
+        return;
+      }
+
+      // Если выбран существующий адрес, обновляем его
+      if (selectedAddress) {
+        const addressRes = await fetch(`v1/users/addresses/${selectedAddress.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(addressData),
+        });
+
+        if (!addressRes.ok) {
+          handleError(addressRes);
+          return;
+        }
+      } else {
+        // Если нет выбранного адреса, отправляем новый
+        const addressRes = await fetch("v1/users/addresses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(addressData),
+        });
+
+        if (!addressRes.ok) {
+          handleError(addressRes);
+          return;
+        }
+      }
+
+      alert("Данные успешно обновлены!");
+
+      // Переключение на форму "receive" после успешной отправки данных
+      currentForm.set("receive");
+
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Ошибка при отправке данных");
+    }
+  };
+
+  // Функции для переключения между формами
+  const openExchangeForm = () => {
+    currentForm.set("");
+    currentForm.set("exchange");
+  };
+
+  const openWantToExchangeForm = () => {
+    currentForm.set("");
+    currentForm.set("wantToExchange");
+  };
+
+  const openReceiveForm = async () => {
+    try {
+      const res = await fetch("v1/wish-list");
+      if (res.ok) {
+        const data = await res.json();
+        selectedGenres = data.genres || [];
+        console.log("Выбранные жанры:", selectedGenres);
+      } else {
+        handleError(res);
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Ошибка при загрузке жанров");
+    }
+
+    await loadUserAddresses();
     currentForm.set("receive");
-    console.log(' openReceiveForm:', $currentForm);
+  
   };
 </script>
 
@@ -102,21 +246,18 @@
         </div>
       </div>
     </div>
+
+    <button class="go-back-btn" on:click={openReceiveForm}>Назад</button>
+    <button class="go-back-btn" on:click={handleSubmit}>Далее</button>
   </div>
 {/if}
 
-{#if $currentForm === "wantToExchange"}
-  <WantToExchangeForm close={close}
-  
-    openExchangeForm={openExchangeForm}
-    openReceiveForm={openReceiveForm}
-    showWantToExchangeForm={true}  
-    bookData={bookData} />
+{#if $currentForm === "receive"}
+  <ReceiveForm close={close} 
+    selectedGenres={selectedGenres} 
+    updateGenres={updateGenres} />
 {/if}
 
-{#if $currentForm === "receive"}
-  <ReceiveForm close={close} />
-{/if}
 
 <style>
   .form-container {
@@ -172,7 +313,8 @@
     gap: 10px; /* Отступ между кнопками */
   }
 
-  .start-exchange-btn {
+  .start-exchange-btn,
+  .go-back-btn {
     flex: 1;
     padding: 10px;
     background: rgb(42, 45, 47);
@@ -183,7 +325,8 @@
     transition: background 0.2s, border-color 0.2s;
   }
 
-  .start-exchange-btn:hover {
+  .start-exchange-btn:hover,
+  .go-back-btn:hover {
     background: rgb(50, 53, 55);
     border-color: rgba(173, 166, 156, 1);
   }

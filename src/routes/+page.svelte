@@ -9,14 +9,21 @@
 	let currentForm: Writable<string> = writable(''); // Пустая строка означает отсутствие формы
 	
 	
-  
+
+    // Стейт для жанров
+    let selectedGenres: string[] = []; // Здесь будут храниться выбранные жанры
+	
+	
 	// Функция для закрытия формы
 	const closeForm = () => {
 	  currentForm.set(''); // Закрываем текущую форму
 	  window.history.pushState({}, '', window.location.pathname); // Сбрасываем URL
 	  console.log("Form closed, URL reset");
 	};
-  
+	const updateGenres = () => {
+    console.log("Updated genres:", selectedGenres);
+    // Логика обновления жанров на сервере или в состоянии
+  };
 	// Функции для переключения форм
 	const openExchangeForm = () => {
 		closeForm();
@@ -41,6 +48,7 @@
 	  window.history.pushState({ form: "wanttoexchange" }, "Хочу обменять", "#wanttoexchange");
 	  console.log("Opened WantToExchange Form");
 	};
+	
   
 	// Слушатель для popstate, чтобы синхронизировать URL с состоянием
 	window.addEventListener("popstate", () => {
@@ -92,7 +100,9 @@
   
 	<!-- Показываем форму ReceiveForm, если состояние currentForm равно 'receive' -->
 	{#if $currentForm === 'receive'}
-  <ReceiveForm close={closeForm} bookData={bookData} />
+  <ReceiveForm close={closeForm} bookData={bookData} 
+  selectedGenres={selectedGenres} 
+      updateGenres={updateGenres}/>
 {/if}
   </main>
   

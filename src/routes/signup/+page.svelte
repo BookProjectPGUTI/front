@@ -174,17 +174,24 @@
     width: 100%;
     padding: 0.7rem;
     border: none;
-    background: #007bff;
-    color: black;
+    background: rgb(232, 121, 62); 
+    color: rgb(0, 0, 0); 
     font-size: 1rem;
-    border-radius: 5px;
+    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    box-sizing: border-box;
-  }
+    transition: background 0.3s ease, transform 0.2s ease;
+}
 
-  button:hover {
-   background:  rgba(150, 140, 130);
-  }
+button:hover {
+    background: rgb(232, 121, 62); 
+    transform: scale(1.05); /* Легкое увеличение */
+}
+
+button:active {
+    transform: scale(0.98); /* Небольшое сжатие при нажатии */
+}
+
 </style>
 
 <div class="container">

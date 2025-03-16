@@ -41,7 +41,6 @@
       console.error(err.message);
     }
   };
-
 </script>
 
 <header>

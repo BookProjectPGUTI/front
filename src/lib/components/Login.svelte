@@ -13,6 +13,11 @@
   let passwordError = writable<string>("");
   let successMessage = writable<string>("");
 
+  $: if ($isOpen) {
+    successMessage.set("");
+    error.set("");
+  }
+
   const validateUsername = (username: string): string => {
     if (!username.trim()) return 'Поле Никнейм не может быть пустым.';
     return ''; 
@@ -44,7 +49,6 @@
     if (usernameValidationError || passwordValidationError) {
       return;
     }
-
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-in", {
         method: "POST",

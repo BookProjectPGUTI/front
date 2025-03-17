@@ -21,13 +21,13 @@
   };
 
   // Валидация ника
-  const validateNickname = (nickname: string): string => {
-    const nicknameRegex = /^[a-zA-Zа-яА-ЯёЁ]+$/;
-    if (!nickname.trim()) return 'Ник не может быть пустым.';
-    if (!nicknameRegex.test(nickname)) return 'Ник должен содержать только буквы латиницы и кириллицы.';
-    if (nickname.length < 3) return 'Ник должен содержать минимум 3 символа.';
-    return '';
-  };
+ const validateNickname = (nickname: string): string => {
+  const nicknameRegex = /^[a-zA-Zа-яА-ЯёЁ0-9]+$/; // Добавлены цифры
+  if (!nickname.trim()) return 'Ник не может быть пустым.';
+  if (!nicknameRegex.test(nickname)) return 'Ник должен содержать только буквы латиницы, кириллицы и цифры.';
+  if (nickname.length < 3) return 'Ник должен содержать минимум 3 символа.';
+  return '';
+};
 
   // Проверка уникальности ника
   const checkNicknameUniqueness = async (nickname: string): Promise<boolean> => {
@@ -63,7 +63,7 @@
     // Проверка уникальности ника
     const isNicknameUnique = await checkNicknameUniqueness(nickname);
     if (!isNicknameUnique) {
-      popupMessage.set('Этот ник уже занят. Пожалуйста, выберите другой.');
+      popupMessage.set('Неверные данные для входа ');
       return;
     }
 
@@ -82,7 +82,7 @@
         } else if (data.detail) {
           popupMessage.set(data.detail);
         } else {
-          popupMessage.set("Ошибка входа. Попробуйте еще раз.");
+          popupMessage.set("Неверные данные для входа ");
         }
       } else {
         popupMessage.set("Вы успешно вошли!");
@@ -108,7 +108,7 @@
 
     const isNicknameUnique = await checkNicknameUniqueness(nickname);
     if (!isNicknameUnique) {
-      popupMessage.set('Этот ник уже занят. Пожалуйста, выберите другой.');
+      popupMessage.set('Неверные данные для входа ');
       showPopup.set(true);
     } else {
       popupMessage.set("");
@@ -177,35 +177,41 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(27,30,31);
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
   .form-wrapper {
-    background: #fff;
+    background: rgba(24,26,27);
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
+    color: rgba(173, 166, 156, 1);
+  }
+
+  h2 {
     text-align: center;
+    margin-bottom: 0.5rem;
   }
 
   .popup {
-    color: red;
-    font-size: 0.9rem;
+    background: rgba(26, 28, 29);
+    color: rgba(255, 91, 91, 1);
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+    font-weight: 600;
+    text-align: center;
     margin-bottom: 1rem;
+    display: none;
   }
 
   .popup.show {
     display: block;
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .form-group {
@@ -214,17 +220,18 @@
 
   label {
     display: block;
-    margin-bottom: 0.3rem;
-    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
   }
 
   input {
     width: 100%;
-    padding: 0.6rem;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border: 1px solid rgba(18,18,18);
     border-radius: 5px;
+    background-color: rgba(27, 30, 31);
+    color: rgba(173, 166, 156, 1);
+    box-sizing: border-box;
   }
 
   button {
@@ -237,17 +244,17 @@
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease; 
-    
-}
-button:hover {
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  button:hover {
     background: rgb(232, 121, 62); 
     transform: scale(1.05); /* Легкое увеличение */
-}
+  }
 
-button:active {
+  button:active {
     transform: scale(0.98); /* Небольшое сжатие при нажатии */
-}
+  }
 
   .forgot-password {
     margin-top: 1rem;

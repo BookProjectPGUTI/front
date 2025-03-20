@@ -1,7 +1,7 @@
 <script lang="ts">
   let activeTab = 'offers'; 
-  let exchangeMakers = [];
-  let currentExchange = null;
+  let exchangeMakers: any[] = [];
+  let currentExchange: { role: string; book: { title: any; }; user: { username: any; }; } | null = null;
   let isLoading = false; 
   let isMaker = false; 
   let isTaker = false; 
@@ -92,7 +92,7 @@
     }
   }
 
-  async function becomeTaker(makerId) {
+  async function becomeTaker(makerId: any) {
     isLoading = true;
     try {
       const response = await fetch('/v1/exchanges/takers', {
@@ -162,7 +162,7 @@
 
   fetchExchangeMakers();
 
-  function handleTabChange(tab) {
+  function handleTabChange(tab: string) {
     activeTab = tab;
     if (tab === 'offers') {
       fetchExchangeMakers(); 

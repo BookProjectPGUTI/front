@@ -5,6 +5,10 @@
     let showGenres = false;
     let selectedGenres = new Set<number>();
 
+    let receiveGenres: { id: number, name: string }[] = [];
+    let showReceiveGenres = false;
+    let selectedReceiveGenres = new Set<number>();
+
     let firstName = "";
     let lastName = "";
     let bookName = "";
@@ -15,11 +19,68 @@
     let originalData: any = null;
 
     function showTab(tab: string) {
-        activeTab = tab;
-        if (tab === "exchange") {
-            fetchActiveBook();
+    activeTab = tab;
+    if (tab === "exchange") {
+        fetchActiveBook();
+    } else if (tab === "receive") {
+        fetchWishList();
+    }}
+    function goBack() {
+        activeTab = 'exchange';
+    }
+
+    async function fetchWishList() {
+    try {
+        const response = await fetch("http://localhost:8000/api/v1/wish-list", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Ошибка загрузки списка желаемых жанров");
+
+        const data = await response.json();
+        selectedReceiveGenres = new Set(data.genres.map((g: { id: number }) => g.id));
+    } catch (error) {
+        console.error("Ошибка при загрузке списка желаемых жанров:", error);
+    }}
+
+    function handleNextButtonClick() {
+        if (activeTab === "exchange") {
+            submitForm();
+        } else if (activeTab === "receive") {
+            submitWishList();
+        }}
+        
+    async function submitWishList() {
+        const requestBody = {
+            genres_ids: Array.from(selectedReceiveGenres)
+        };
+
+        try {
+            const response = await fetch("http://localhost:8000/api/v1/wish-list", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+                credentials: "include",
+            });
+
+            if (response.status === 201) {
+                console.log("Список желаемых жанров успешно сохранен.");
+                activeTab = "address";
+            } else {
+                throw new Error("Ошибка сохранения списка желаемых жанров");
+            }
+        } catch (error) {
+            console.error("Ошибка при отправке списка желаемых жанров:", error);
+            alert("Ошибка при отправке данных");
         }
     }
+
 
     async function fetchGenres() {
         if (showGenres) {
@@ -45,6 +106,37 @@
             console.error("Ошибка при загрузке жанров:", error);
         }
     }
+
+    async function fetchReceiveGenres() {
+    if (showReceiveGenres) {
+        showReceiveGenres = false;
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:8000/api/v1/genres", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Ошибка загрузки жанров");
+
+        const data = await response.json();
+        receiveGenres = data.genres || [];
+        showReceiveGenres = true;
+    } catch (error) {
+        console.error("Ошибка при загрузке жанров:", error);
+    }}
+
+    function toggleReceiveGenre(genreId: number) {
+    if (selectedReceiveGenres.has(genreId)) {
+        selectedReceiveGenres.delete(genreId);
+    } else {
+        selectedReceiveGenres.add(genreId);
+    }}
 
     async function fetchActiveBook() {
         try {
@@ -208,77 +300,37 @@
             </div>
         </div>
         {/if}
-
-        <button class="next-button" on:click={submitForm}>Далее >></button>
+        {#if activeTab === 'receive'}
+        <div class="receive-container">
+            <div class="form-group">
+                <!-- svelte-ignore a11y_label_has_associated_control -->
+                <label>Категории *</label>
+                <button class="genre-button" on:click={fetchReceiveGenres}>
+                    {showReceiveGenres ? "- Жанр" : "+ Жанр"}
+                </button>
+                {#if showReceiveGenres}
+                  <div class="dropdown-content">
+                    {#each receiveGenres as genre}
+                      <label>
+                        <input type="checkbox" on:change={() => toggleReceiveGenre(genre.id)} checked={selectedReceiveGenres.has(genre.id)}>
+                        {genre.name}
+                      </label>
+                    {/each}
+                  </div>
+                {/if}
+            </div>
+        </div>
+        {/if}
+        <div class="button-container">
+            {#if activeTab === 'receive'}
+                <button class="back-button" on:click={goBack}>&lt;&lt; Назад</button>
+            {/if}
+            <button class="next-button" on:click={handleNextButtonClick}>Далее &gt;&gt;</button>
+        </div>
     </section>
 </main>
 
 <style>
-    .active-tab {
-        background: rgb(80, 120, 200);
-        color: white;
-        font-weight: bold;
-        border: 2px solid white;
-    }
-    .genre-button {
-        color: #4da6ff;
-        cursor: pointer;
-        font-weight: bold;
-        border: none;
-        background: none;
-        padding: 5px 10px;
-        transition: color 0.3s;
-    }
-
-    .genre-button:hover {
-        color: #1a75ff;
-    }
-
-    .dropdown-content {
-        position: relative;
-        width: 100%;
-        background: #323232;
-        border: 1px solid gray;
-        border-radius: 8px;
-        padding: 10px;
-        max-height: 180px;
-        overflow-y: auto;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-        margin-top: 5px;
-    }
-
-    .dropdown-content label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 5px 0;
-        font-size: 14px;
-        color: white;
-    }
-
-    .dropdown-content input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-    }
-
-    .next-button {
-      position: absolute;
-      right: 15px;
-      bottom: 15px;
-      padding: 8px 15px;
-      background: rgb(100, 100, 255);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    .next-button:hover {
-      background: rgb(80, 80, 230);
-    }
-
-
     * {
         box-sizing: border-box;
     }
@@ -303,10 +355,13 @@
         border-radius: 8px;
         text-decoration: none;
         color: rgba(173, 166, 156, 1);
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
     }
 
     .menu-item:hover {
         background: rgb(50, 53, 55);
+        border-color: #4da6ff;
     }
 
     .exchange-form {
@@ -337,10 +392,20 @@
         cursor: pointer;
         border-radius: 5px;
         font-size: 1rem;
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
     }
 
     .tab-button:hover {
         background: rgb(60, 63, 65);
+        border-color: #4da6ff;
+    }
+
+    .active-tab {
+        background: rgb(80, 120, 200);
+        color: white;
+        font-weight: bold;
+        border: 2px solid #4da6ff;
     }
 
     .exchange-container {
@@ -378,33 +443,123 @@
         border-radius: 5px;
         background: rgb(50, 50, 50);
         color: white;
+        transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+        border-color: #4da6ff;
+        outline: none;
+    }
+
+    .genre-button {
+        color: #4da6ff;
+        cursor: pointer;
+        font-weight: bold;
+        border: 2px solid transparent;
+        background: none;
+        padding: 5px 10px;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .genre-button:hover {
+        color: #1a75ff;
+        border-color: #4da6ff;
+    }
+
+    .dropdown-content {
+        position: relative;
+        width: 100%;
+        background: #323232;
+        border: 1px solid gray;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 180px;
+        overflow-y: auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        margin-top: 5px;
+        transition: border-color 0.3s ease;
+    }
+
+    .dropdown-content:hover {
+        border-color: #4da6ff;
     }
 
     .dropdown-content label {
         display: flex;
         align-items: center;
+        gap: 8px;
         padding: 5px 0;
+        font-size: 14px;
+        color: white;
+        border-radius: 5px;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
-    .dropdown-content input {
-        margin-right: 10px;
+    .dropdown-content label:hover {
+        background-color: rgba(77, 166, 255, 0.1);
+        border: 1px solid #4da6ff;
+    }
+
+    .dropdown-content input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+
+    .button-container {
+        position: absolute;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .back-button, .next-button {
+        padding: 8px 15px;
+        background: rgb(100, 100, 255);
+        color: white;
+        border: 2px solid transparent;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .back-button:hover, .next-button:hover {
+        background: rgb(80, 80, 230);
+        border-color: #4da6ff;
+    }
+
+    .back-button {
+        position: absolute;
+        left: 10px;
+        bottom: 5px;
     }
 
     .next-button {
-        padding: 8px;
-        font-size: 0.9rem;
-        background: rgb(100, 100, 255);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
         position: absolute;
         right: 10px;
-        bottom: 10px;
+        bottom: 5px;
     }
 
-    .next-button:hover {
-        background: rgb(80, 80, 230);
+    .receive-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-left: 20px;
+        margin-left: 32%;
     }
 
+    .form-group {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+        text-align: left;
+    }
 </style>

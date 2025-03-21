@@ -40,7 +40,16 @@
     let isbnError: string | null = null;
     let publicationYearError: string | null = null;    
     let genresError: string | null = null;
-
+    let receiveGenresError: string | null = null;
+    let cityError: string | null = null;
+    let streetError: string | null = null;
+    let buildingError: string | null = null;
+    let houseError: string | null = null;
+    let apartmentError: string | null = null;
+    let postalCodeError: string | null = null;
+    let lastNameError: string | null = null;
+    let firstNameError: string | null = null;
+    let middleNameError: string | null = null;
     $: {
         if ($userStore) {
             lastName = $userStore.last_name || ''; 
@@ -49,64 +58,164 @@
         }
     }
 
-function validateForm(): boolean {
-    let isValid = true;
+    function validateForm(): boolean {
+        let isValid = true;
 
-    // Очистка предыдущих ошибок
-    firstNameAError = null;
-    lastNameAError = null;
-    bookNameError = null;
-    isbnError = null;
-    publicationYearError = null;
-    genresError = null; // Очистка ошибки жанров
+        firstNameAError = null;
+        lastNameAError = null;
+        bookNameError = null;
+        isbnError = null;
+        publicationYearError = null;
+        genresError = null;
 
-    // Валидация имени автора
-    if (!firstNameA.trim()) {
-        firstNameAError = "Имя автора не может быть пустым.";
-        isValid = false;
+        if (!firstNameA.trim()) {
+            firstNameAError = "Имя автора не может быть пустым.";
+            isValid = false;
+        } else if (firstNameA.length > 48) {
+            firstNameAError = "Имя автора не может быть длиннее 48 символов.";
+            isValid = false;
+        }
+
+        if (!lastNameA.trim()) {
+            lastNameAError = "Фамилия автора не может быть пустой.";
+            isValid = false;
+        } else if (lastNameA.length > 48) {
+            lastNameAError = "Фамилия автора не может быть длиннее 48 символов.";
+            isValid = false;
+        }
+
+        if (!bookName.trim()) {
+            bookNameError = "Название книги не может быть пустым.";
+            isValid = false;
+        } else if (bookName.length > 128) {
+            bookNameError = "Название книги не может быть длиннее 128 символов.";
+            isValid = false;
+        }
+
+        if (!isbn.trim()) {
+            isbnError = "ISBN не может быть пустым.";
+            isValid = false;
+        } else if (!/^\d{13}$/.test(isbn)) {
+            isbnError = "ISBN должен состоять из 13 цифр.";
+            isValid = false;
+        }
+
+        if (!publicationYear.trim()) {
+            publicationYearError = "Год издания не может быть пустым.";
+            isValid = false;
+        } else if (!/^\d{4}$/.test(publicationYear)) {
+            publicationYearError = "Год издания должен быть четырехзначным числом.";
+            isValid = false;
+        } else if (Number(publicationYear) > 2025) {
+            publicationYearError = "Год издания не может быть больше 2025.";
+            isValid = false;
+        }
+
+        if (selectedGenres.size === 0) {
+            genresError = "Выберите хотя бы один жанр.";
+            isValid = false;
+        }
+        return isValid;
+    }
+    function validateReceiveForm(): boolean {
+        let isValid = true;
+
+        receiveGenresError = null;
+
+        if (selectedReceiveGenres.size === 0) {
+            receiveGenresError = "Выберите хотя бы один жанр.";
+            isValid = false;
+        }
+
+        return isValid;
     }
 
-    // Валидация фамилии автора
-    if (!lastNameA.trim()) {
-        lastNameAError = "Фамилия автора не может быть пустой.";
-        isValid = false;
-    }
+    function validateAddressForm(): boolean {
+        let isValid = true;
 
-    // Валидация названия книги
-    if (!bookName.trim()) {
-        bookNameError = "Название книги не может быть пустым.";
-        isValid = false;
-    }
+        cityError = null;
+        streetError = null;
+        buildingError = null;
+        houseError = null;
+        apartmentError = null;
+        postalCodeError = null;
+        lastNameError = null;
+        firstNameError = null;
+        middleNameError = null;
 
-    // Валидация ISBN
-    if (!isbn.trim()) {
-        isbnError = "ISBN не может быть пустым.";
-        isValid = false;
-    } else if (!/^\d{13}$/.test(isbn)) {
-        isbnError = "ISBN должен состоять из 13 цифр.";
-        isValid = false;
-    }
+        if (!city.trim()) {
+            cityError = "Город не может быть пустым.";
+            isValid = false;
+        } else if (city.length > 128) {
+            cityError = "Город не может быть длиннее 128 символов.";
+            isValid = false;
+        }
 
-    // Валидация года издания
-    if (!publicationYear.trim()) {
-        publicationYearError = "Год издания не может быть пустым.";
-        isValid = false;
-    } else if (isNaN(Number(publicationYear))) {
-        publicationYearError = "Год издания должен быть числом.";
-        isValid = false;
-    } else if (Number(publicationYear) > 2025) {
-        publicationYearError = "Год издания не может быть больше 2025.";
-        isValid = false;
-    }
+        if (!street.trim()) {
+            streetError = "Улица не может быть пустой.";
+            isValid = false;
+        } else if (street.length > 128) {
+            streetError = "Улица не может быть длиннее 128 символов.";
+            isValid = false;
+        }
 
-    // Валидация жанров
-    if (selectedGenres.size === 0) {
-        genresError = "Выберите хотя бы один жанр.";
-        isValid = false;
-    }
+        if (building.trim() && !/^\d+$/.test(building)) {
+            buildingError = "Строение должно состоять только из цифр.";
+            isValid = false;
+        } else if (building.length > 128) {
+            buildingError = "Строение не может быть длиннее 128 символов.";
+            isValid = false;
+        }
 
-    return isValid;
-}
+        if (house.trim() && !/^\d+$/.test(house)) {
+            houseError = "Дом должен состоять только из цифр.";
+            isValid = false;
+        } else if (house.length > 128) {
+            houseError = "Дом не может быть длиннее 128 символов.";
+            isValid = false;
+        }
+
+        if (!apartment.trim()) {
+            apartmentError = "Квартира не может быть пустой.";
+            isValid = false;
+        } else if (!/^\d+$/.test(apartment)) {
+            apartmentError = "Квартира должна состоять только из цифр.";
+            isValid = false;
+        } else if (apartment.length > 128) {
+            apartmentError = "Квартира не может быть длиннее 128 символов.";
+            isValid = false;
+        }
+
+        if (!postalCode.trim()) {
+            postalCodeError = "Индекс не может быть пустым.";
+            isValid = false;
+        } else if (!/^\d{6}$/.test(postalCode)) {
+            postalCodeError = "Индекс должен состоять из 6 цифр.";
+            isValid = false;
+        }
+
+        if (!lastName.trim()) {
+            lastNameError = "Фамилия не может быть пустой.";
+            isValid = false;
+        } else if (lastName.length > 50) {
+            lastNameError = "Фамилия не может быть длиннее 50 символов.";
+            isValid = false;
+        }
+
+        if (!firstName.trim()) {
+            firstNameError = "Имя не может быть пустым.";
+            isValid = false;
+        } else if (firstName.length > 50) {
+            firstNameError = "Имя не может быть длиннее 50 символов.";
+            isValid = false;
+        }
+
+        if (middleName.trim() && middleName.length > 50) {
+            middleNameError = "Отчество не может быть длиннее 50 символов.";
+            isValid = false;
+        }
+        return isValid;
+    }
     function showTab(tab: string) {
         activeTab = tab;
         if (tab === "exchange") {
@@ -126,12 +235,15 @@ function validateForm(): boolean {
     }
     function handleNextButtonClick() {
         if (activeTab === "exchange") {
+            if (!validateForm()) return;
             submitForm();
             fetchWishList();
         } else if (activeTab === "receive") {
+            if (!validateReceiveForm()) return;
             submitWishList();
             fetchAddresses();
-        }}   
+        }
+    } 
     async function fetchGenres() {
         if (showGenres) {
             showGenres = false;
@@ -307,6 +419,10 @@ function validateForm(): boolean {
     }    
 
     async function confirmAddress() {
+        if (!validateAddressForm()) {
+            return; // Остановить отправку, если есть ошибки
+        }
+
         try {
             const userResponse = await fetch(`${API_BASE_URL}/users`, {
                 method: "PUT",
@@ -368,8 +484,6 @@ function validateForm(): boolean {
 
                 console.log("Адрес пользователя успешно добавлен.");
             }
-
-        
         } catch (error) {
             console.error("Ошибка:", error);
         }
@@ -434,19 +548,25 @@ function validateForm(): boolean {
         <div class="exchange-container">
             <div class="left-column">
                 <div class="form-group">
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Автор *</label>
                     <div class="input-group">
-                        <input type="text" placeholder="Фамилия" bind:value={lastNameA}>
-                        {#if lastNameAError}
-                            <div class="error-message">{lastNameAError}</div>
-                        {/if}
-                        <input type="text" placeholder="Имя" bind:value={firstNameA}>
-                        {#if firstNameAError}
-                            <div class="error-message">{firstNameAError}</div>
-                        {/if}
+                        <div class="input-wrapper">
+                            <input type="text" placeholder="Фамилия" bind:value={lastNameA}>
+                            {#if lastNameAError}
+                                <div class="error-message">{lastNameAError}</div>
+                            {/if}
+                        </div>
+                        <div class="input-wrapper">
+                            <input type="text" placeholder="Имя" bind:value={firstNameA}>
+                            {#if firstNameAError}
+                                <div class="error-message">{firstNameAError}</div>
+                            {/if}
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Название книги *</label>
                     <input type="text" placeholder="Название книги" bind:value={bookName}>
                     {#if bookNameError}
@@ -455,6 +575,7 @@ function validateForm(): boolean {
                 </div>
                 <div class="form-group inline-group">
                     <div>
+                        <!-- svelte-ignore a11y_label_has_associated_control -->
                         <label>ISBN</label>
                         <input type="text" placeholder="9785936732652" bind:value={isbn}>
                         {#if isbnError}
@@ -462,6 +583,7 @@ function validateForm(): boolean {
                         {/if}
                     </div>
                     <div>
+                        <!-- svelte-ignore a11y_label_has_associated_control -->
                         <label>Год издания *</label>
                         <input type="text" placeholder="2012" bind:value={publicationYear}>
                         {#if publicationYearError}
@@ -472,6 +594,7 @@ function validateForm(): boolean {
             </div>
             <div class="right-column">
                 <div class="form-group">
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Категории *</label>
                     <div></div>
                     <button class="genre-button" on:click={fetchGenres}>{showGenres ? "- Жанр" : "+ Жанр"}</button>
@@ -500,19 +623,22 @@ function validateForm(): boolean {
                 <button class="genre-button" on:click={fetchReceiveGenres}>
                     {showReceiveGenres ? "- Жанр" : "+ Жанр"}
                 </button>
+                {#if receiveGenresError}
+                    <div class="error-message">{receiveGenresError}</div>
+                {/if}
                 {#if showReceiveGenres}
-                <div class="dropdown-content">
-                    {#each receiveGenres as genre}
-                    <label>
-                        <input type="checkbox" on:change={() => toggleReceiveGenre(genre.id)} checked={selectedReceiveGenres.has(genre.id)}>
-                        {genre.name}
-                    </label>
-                    {/each}
-                </div>
+                    <div class="dropdown-content">
+                        {#each receiveGenres as genre}
+                            <label>
+                                <input type="checkbox" on:change={() => toggleReceiveGenre(genre.id)} checked={selectedReceiveGenres.has(genre.id)}>
+                                {genre.name}
+                            </label>
+                        {/each}
+                    </div>
                 {/if}
             </div>
         </div>
-        {/if}        
+        {/if}
         {#if activeTab === 'address'}
         <button on:click={openModal}>Выбрать адрес</button>
         <div class="address-container">
@@ -521,34 +647,51 @@ function validateForm(): boolean {
                     <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Город *</label>
                     <input type="text" placeholder="Москва" bind:value={city}>
+                    {#if cityError}
+                        <div class="error-message">{cityError}</div>
+                    {/if}
                 </div>
-                <!-- svelte-ignore a11y_label_has_associated_control -->
                 <div class="form-group">
+                    <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Улица *</label>
                     <input type="text" placeholder="Название улицы" bind:value={street}>
+                    {#if streetError}
+                        <div class="error-message">{streetError}</div>
+                    {/if}
                 </div>
                 <div class="inline-address-group">
                     <div class="form-group">
                         <!-- svelte-ignore a11y_label_has_associated_control -->
-                        <label>Строение *</label>
+                        <label>Строение</label>
                         <input type="text" placeholder="номер" bind:value={building}>
+                        {#if buildingError}
+                            <div class="error-message">{buildingError}</div>
+                        {/if}
                     </div>
                     <div class="form-group">
                         <!-- svelte-ignore a11y_label_has_associated_control -->
-                        <label>Дом *</label>
+                        <label>Дом</label>
                         <input type="text" placeholder="дом" bind:value={house}>
+                        {#if houseError}
+                            <div class="error-message">{houseError}</div>
+                        {/if}
                     </div>
                     <div class="form-group">
                         <!-- svelte-ignore a11y_label_has_associated_control -->
-                        <label>Квартира</label>
+                        <label>Квартира *</label>
                         <input type="text" placeholder="квартира" bind:value={apartment}>
+                        {#if apartmentError}
+                            <div class="error-message">{apartmentError}</div>
+                        {/if}
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Индекс *</label>
                     <input type="text" placeholder="индекс" bind:value={postalCode}>
+                    {#if postalCodeError}
+                        <div class="error-message">{postalCodeError}</div>
+                    {/if}
                 </div>
             </div>
             <div class="address-column">
@@ -556,16 +699,25 @@ function validateForm(): boolean {
                     <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Фамилия *</label>
                     <input type="text" placeholder="Иванов" bind:value={lastName}>
+                    {#if lastNameError}
+                        <div class="error-message">{lastNameError}</div>
+                    {/if}
                 </div>
                 <div class="form-group">
                     <!-- svelte-ignore a11y_label_has_associated_control -->
                     <label>Имя *</label>
                     <input type="text" placeholder="Имя" bind:value={firstName}>
+                    {#if firstNameError}
+                        <div class="error-message">{firstNameError}</div>
+                    {/if}
                 </div>
                 <div class="form-group">
                     <!-- svelte-ignore a11y_label_has_associated_control -->
-                    <label>Отчество (при наличии) *</label>
+                    <label>Отчество (при наличии)</label>
                     <input type="text" placeholder="Отчество" bind:value={middleName}>
+                    {#if middleNameError}
+                        <div class="error-message">{middleNameError}</div>
+                    {/if}
                 </div>
             </div>
         </div>
@@ -695,7 +847,7 @@ function validateForm(): boolean {
         max-width: 800px;
         width: 100%;
         position: relative;
-        height: 580px;
+        height: 680px;
     }
     .form-title {
         text-align: center;
@@ -857,5 +1009,25 @@ function validateForm(): boolean {
         margin-bottom: 10px;
         font-weight: bold;
         text-align: left;
+    }
+    .input-group {
+    display: flex;
+    gap: 10px;
+    }
+
+    .input-wrapper {
+        flex: 1; /* Равномерное распределение пространства */
+        display: flex;
+        flex-direction: column; /* Элементы располагаются вертикально */
+    }
+
+    .input-wrapper input {
+        width: 100%; /* Ширина поля ввода на 100% */
+    }
+
+    .error-message {
+        color: red;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
     }
 </style>

@@ -1,11 +1,13 @@
+// Header.svelte
 <script lang="ts">
   import Login from "$lib/components/Login.svelte";
   import { writable } from "svelte/store";
   import { onMount } from 'svelte';
   import { fetchWithRefresh, clearRefreshTimer } from '$lib/auth';
+  import { userStore } from '$lib/stores'; 
 
   let isLoginOpen = writable(false);
-  let user = writable<{ id: string; username: string; email: string } | null>(null);
+
   onMount(async () => {
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
@@ -15,15 +17,16 @@
 
       if (response.ok) {
         const data = await response.json();
-        user.set(data); 
+        userStore.set(data); 
       } else {
-        user.set(null);
+        userStore.set(null); 
       }
     } catch (err) {
       console.error("Ошибка при проверке авторизации:", err);
-      user.set(null);
+      userStore.set(null);
     }
   });
+
   const handleLogout = async () => {
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-out", {
@@ -31,7 +34,7 @@
       });
 
       if (response.status === 204) {
-        user.set(null); 
+        userStore.set(null); 
         clearRefreshTimer();
       } else {
         const data = await response.json();
@@ -46,8 +49,8 @@
 <header>
   <a href="/"> <div class="logo">Логотип</div></a> 
   <nav>
-    {#if $user}
-      <span>{$user.username}</span>
+    {#if $userStore}
+      <span>{$userStore.username}</span>
       <button on:click={handleLogout}>Выйти</button>
     {:else}
       <a href="/signup">Регистрация</a>
@@ -56,7 +59,7 @@
   </nav>
 </header>
 
-<Login bind:isOpen={isLoginOpen} bind:user={user} />
+<Login bind:isOpen={isLoginOpen} />
 
 <style>
   header {

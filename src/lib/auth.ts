@@ -1,4 +1,4 @@
-import { user } from './stores'; 
+import { userStore } from './stores'; 
 
 let refreshTimer: number | null = null; 
 

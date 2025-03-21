@@ -2,8 +2,9 @@
   import { writable } from "svelte/store";
   import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth';
   import { goto } from '$app/navigation';
+  import { userStore } from '$lib/stores'; 
+
   export let isOpen = writable(false);
-  export let user = writable<{ id: string; username: string; email: string } | null>(null);
 
   let username: string = "";
   let password: string = "";
@@ -84,7 +85,7 @@
       error.set("");
       successMessage.set("Вы успешно вошли!");
       showPopup.set(true);
-      user.set(data); 
+      userStore.set(data); 
       setTimeout(() => {
         isOpen.set(false);
       }, 1000);

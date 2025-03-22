@@ -80,12 +80,27 @@
             throw new Error("Ошибка входа");
         }
       }
-
       successMessage.set("");
       error.set("");
       successMessage.set("Вы успешно вошли!");
       showPopup.set(true);
       userStore.set(data); 
+      try {
+        const userResponse = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          userStore.set(userData); 
+        } else {
+          userStore.set(null); 
+        }
+      } catch (err) {
+        console.error("Ошибка при проверке авторизации:", err);
+        userStore.set(null);
+      }
       setTimeout(() => {
         isOpen.set(false);
       }, 1000);

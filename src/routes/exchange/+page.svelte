@@ -59,64 +59,74 @@
     }
 
     function validateForm(): boolean {
-        let isValid = true;
+    let isValid = true;
 
-        firstNameAError = null;
-        lastNameAError = null;
-        bookNameError = null;
-        isbnError = null;
-        publicationYearError = null;
-        genresError = null;
+    firstNameAError = null;
+    lastNameAError = null;
+    bookNameError = null;
+    isbnError = null;
+    publicationYearError = null;
+    genresError = null;
 
-        if (!firstNameA.trim()) {
-            firstNameAError = "Имя автора не может быть пустым.";
-            isValid = false;
-        } else if (firstNameA.length > 48) {
-            firstNameAError = "Имя автора не может быть длиннее 48 символов.";
-            isValid = false;
-        }
-
-        if (!lastNameA.trim()) {
-            lastNameAError = "Фамилия автора не может быть пустой.";
-            isValid = false;
-        } else if (lastNameA.length > 48) {
-            lastNameAError = "Фамилия автора не может быть длиннее 48 символов.";
-            isValid = false;
-        }
-
-        if (!bookName.trim()) {
-            bookNameError = "Название книги не может быть пустым.";
-            isValid = false;
-        } else if (bookName.length > 128) {
-            bookNameError = "Название книги не может быть длиннее 128 символов.";
-            isValid = false;
-        }
-
-        if (!isbn.trim()) {
-            isbnError = "ISBN не может быть пустым.";
-            isValid = false;
-        } else if (!/^\d{13}$/.test(isbn)) {
-            isbnError = "ISBN должен состоять из 13 цифр.";
-            isValid = false;
-        }
-
-        if (!publicationYear.trim()) {
-            publicationYearError = "Год издания не может быть пустым.";
-            isValid = false;
-        } else if (!/^\d{4}$/.test(publicationYear)) {
-            publicationYearError = "Год издания должен быть четырехзначным числом.";
-            isValid = false;
-        } else if (Number(publicationYear) > 2025) {
-            publicationYearError = "Год издания не может быть больше 2025.";
-            isValid = false;
-        }
-
-        if (selectedGenres.size === 0) {
-            genresError = "Выберите хотя бы один жанр.";
-            isValid = false;
-        }
-        return isValid;
+    if (!firstNameA.trim()) {
+        firstNameAError = "Имя автора не может быть пустым.";
+        isValid = false;
+    } else if (firstNameA.length > 48) {
+        firstNameAError = "Имя автора не может быть длиннее 48 символов.";
+        isValid = false;
+    } else if (!/^[a-zA-Zа-яА-Я]+$/.test(firstNameA)) {
+        firstNameAError = "Имя автора должно содержать только буквы (кириллица или латиница).";
+        isValid = false;
     }
+
+    if (!lastNameA.trim()) {
+        lastNameAError = "Фамилия автора не может быть пустой.";
+        isValid = false;
+    } else if (lastNameA.length > 48) {
+        lastNameAError = "Фамилия автора не может быть длиннее 48 символов.";
+        isValid = false;
+    } else if (!/^[a-zA-Zа-яА-Я]+$/.test(lastNameA)) {
+        lastNameAError = "Фамилия автора должна содержать только буквы (кириллица или латиница).";
+        isValid = false;
+    }
+
+    if (!bookName.trim()) {
+        bookNameError = "Название книги не может быть пустым.";
+        isValid = false;
+    } else if (bookName.length > 128) {
+        bookNameError = "Название книги не может быть длиннее 128 символов.";
+        isValid = false;
+    } else if (!/^[a-zA-Zа-яА-Я0-9\s\-.,!?()"'«»]+$/.test(bookName)) {
+        bookNameError = "Название книги может содержать только буквы (кириллица или латиница), цифры, кавычки, тире и знаки препинания.";
+        isValid = false;
+    }
+
+    if (!isbn.trim()) {
+        isbnError = "ISBN не может быть пустым.";
+        isValid = false;
+    } else if (!/^\d{13}$/.test(isbn)) {
+        isbnError = "ISBN должен состоять из 13 цифр.";
+        isValid = false;
+    }
+
+    if (!publicationYear.trim()) {
+        publicationYearError = "Год издания не может быть пустым.";
+        isValid = false;
+    } else if (!/^\d{4}$/.test(publicationYear)) {
+        publicationYearError = "Год издания должен быть четырехзначным числом.";
+        isValid = false;
+    } else if (Number(publicationYear) > 2025) {
+        publicationYearError = "Год издания не может быть больше 2025.";
+        isValid = false;
+    }
+
+    if (selectedGenres.size === 0) {
+        genresError = "Выберите хотя бы один жанр.";
+        isValid = false;
+    }
+
+    return isValid;
+}
     function validateReceiveForm(): boolean {
         let isValid = true;
 
@@ -149,6 +159,9 @@
         } else if (city.length > 128) {
             cityError = "Город не может быть длиннее 128 символов.";
             isValid = false;
+        } else if (!/^[а-яА-Я\s-]+$/.test(city)) {
+            cityError = "Город должен содержать только кириллицу, пробелы и тире.";
+            isValid = false;
         }
 
         if (!street.trim()) {
@@ -157,18 +170,24 @@
         } else if (street.length > 128) {
             streetError = "Улица не может быть длиннее 128 символов.";
             isValid = false;
+        } else if (!/^[а-яА-Я0-9\s-]+$/.test(street)) {
+            streetError = "Улица должна содержать только кириллицу, цифры, пробелы и тире.";
+            isValid = false;
         }
 
-        if (building.trim() && !/^\d+$/.test(building)) {
-            buildingError = "Строение должно состоять только из цифр.";
+        if (building.trim() && !/^[а-яА-Я0-9]+$/.test(building)) {
+            buildingError = "Строение должно содержать только кириллицу или цифры.";
             isValid = false;
         } else if (building.length > 128) {
             buildingError = "Строение не может быть длиннее 128 символов.";
             isValid = false;
         }
 
-        if (house.trim() && !/^\d+$/.test(house)) {
-            houseError = "Дом должен состоять только из цифр.";
+        if (!house.trim()) {
+            houseError = "Дом не может быть пустым.";
+            isValid = false;
+        } else if (!/^[а-яА-Я0-9]+$/.test(house)) {
+            houseError = "Дом должен содержать только кириллицу или цифры.";
             isValid = false;
         } else if (house.length > 128) {
             houseError = "Дом не может быть длиннее 128 символов.";
@@ -179,7 +198,7 @@
             apartmentError = "Квартира не может быть пустой.";
             isValid = false;
         } else if (!/^\d+$/.test(apartment)) {
-            apartmentError = "Квартира должна состоять только из цифр.";
+            apartmentError = "Квартира должна содержать только цифры.";
             isValid = false;
         } else if (apartment.length > 128) {
             apartmentError = "Квартира не может быть длиннее 128 символов.";
@@ -200,6 +219,9 @@
         } else if (lastName.length > 50) {
             lastNameError = "Фамилия не может быть длиннее 50 символов.";
             isValid = false;
+        } else if (!/^[а-яА-Я]+$/.test(lastName)) {
+            lastNameError = "Фамилия должна содержать только кириллицу.";
+            isValid = false;
         }
 
         if (!firstName.trim()) {
@@ -208,12 +230,19 @@
         } else if (firstName.length > 50) {
             firstNameError = "Имя не может быть длиннее 50 символов.";
             isValid = false;
+        } else if (!/^[а-яА-Я]+$/.test(firstName)) {
+            firstNameError = "Имя должно содержать только кириллицу.";
+            isValid = false;
         }
 
-        if (middleName.trim() && middleName.length > 50) {
+        if (middleName.trim() && !/^[а-яА-Я]*$/.test(middleName)) {
+            middleNameError = "Отчество должно содержать только кириллицу.";
+            isValid = false;
+        } else if (middleName.length > 50) {
             middleNameError = "Отчество не может быть длиннее 50 символов.";
             isValid = false;
         }
+
         return isValid;
     }
     function showTab(tab: string) {
@@ -331,7 +360,7 @@
     }
     async function submitForm() {
     if (!validateForm()) {
-        return; // Остановить отправку, если есть ошибки
+        return;
     }
 
     const requestBody = {
@@ -419,96 +448,103 @@
     }    
 
     async function confirmAddress() {
-        if (!validateAddressForm()) {
-            return; // Остановить отправку, если есть ошибки
+    if (!validateAddressForm()) {
+        return; 
+    }
+
+    try {
+        const userResponse = await fetch(`${API_BASE_URL}/users`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                second_name: middleName
+            }),
+            credentials: "include",
+        });
+
+        if (userResponse.status !== 204) {
+            throw new Error("Ошибка при обновлении ФИО");
         }
 
-        try {
-            const userResponse = await fetch(`${API_BASE_URL}/users`, {
+        console.log("ФИО пользователя успешно обновлено.");
+
+        if (selectedAddress) {
+            const addressResponse = await fetch(`${API_BASE_URL}/users/addresses/${selectedAddress.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    first_name: firstName,
-                    last_name: lastName,
-                    second_name: middleName
+                    mail_index: postalCode,
+                    city: city,
+                    street: street,
+                    house: house,
+                    build: building,
+                    apartment: apartment,
+                    is_active: setAsDefault 
                 }),
                 credentials: "include",
             });
 
-            if (userResponse.status !== 204) {
-                throw new Error("Ошибка при обновлении ФИО");
+            if (addressResponse.status !== 204) {
+                throw new Error("Ошибка при обновлении адреса");
             }
 
-            console.log("ФИО пользователя успешно обновлено.");
-
-            if (selectedAddress) {
-                const addressResponse = await fetch(`${API_BASE_URL}/users/addresses/${selectedAddress.id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        mail_index: postalCode,
-                        city: city,
-                        street: street,
-                        house: house,
-                        build: building,
-                        apartment: apartment,
-                        is_active: true
-                    }),
-                    credentials: "include",
-                });
-
-                if (addressResponse.status !== 204) {
-                    throw new Error("Ошибка при обновлении адреса");
-                }
-
-                console.log("Адрес пользователя успешно обновлен.");
-            } else {
-                const addressResponse = await fetch(`${API_BASE_URL}/users/addresses`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        mail_index: postalCode,
-                        city: city,
-                        street: street,
-                        house: house,
-                        build: building,
-                        apartment: apartment,
-                        is_active: true
-                    }),
-                    credentials: "include",
-                });
-
-                if (addressResponse.status !== 201) {
-                    throw new Error("Ошибка при добавлении адреса");
-                }
-
-                console.log("Адрес пользователя успешно добавлен.");
-            }
-        } catch (error) {
-            console.error("Ошибка:", error);
-        }
-    }
-
-    async function fetchAddresses() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/addresses`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+            console.log("Адрес пользователя успешно обновлен.");
+        } else {
+            const addressResponse = await fetch(`${API_BASE_URL}/users/addresses`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    mail_index: postalCode,
+                    city: city,
+                    street: street,
+                    house: house,
+                    build: building,
+                    apartment: apartment,
+                    is_active: setAsDefault 
+                }),
                 credentials: "include",
             });
 
-            if (!response.ok) {
-                throw new Error("Ошибка загрузки адресов");
+            if (addressResponse.status !== 201) {
+                throw new Error("Ошибка при добавлении адреса");
             }
 
-            const data = await response.json();
-            addresses = data.addresses || [];
-        } catch (error) {
-            console.error("Ошибка при загрузке адресов:", error);
+            console.log("Адрес пользователя успешно добавлен.");
         }
+    } catch (error) {
+        console.error("Ошибка:", error);
     }
+}
+
+    async function fetchAddresses() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/addresses`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error("Ошибка загрузки адресов");
+        }
+
+        const data = await response.json();
+        addresses = data.addresses || [];
+
+        const activeAddress = addresses.find((address: any) => address.is_active);
+
+        if (activeAddress) {
+            selectAddress(activeAddress);
+            setAsDefault = true;
+        }
+    } catch (error) {
+        console.error("Ошибка при загрузке адресов:", error);
+    }
+}
 
     function openModal() {
         showModal = true;
@@ -525,8 +561,19 @@
         building = address.build;
         apartment = address.apartment;
         postalCode = address.mail_index;
+        setAsDefault = address.is_active || false;
     }
-
+    function addNewAddress() {
+            selectedAddress = null;
+            city = "";
+            street = "";
+            house = "";
+            building = "";
+            apartment = "";
+            postalCode = "";
+            setAsDefault = false;
+            closeModal();
+        }
         onMount(fetchActiveBook);
 </script>
 
@@ -693,6 +740,11 @@
                         <div class="error-message">{postalCodeError}</div>
                     {/if}
                 </div>
+                <div class="form-group default-address-container">
+                    <label class="default-address-label">
+                        <input type="checkbox" bind:checked={setAsDefault}> Сделать адресом по умолчанию
+                    </label>
+                </div>
             </div>
             <div class="address-column">
                 <div class="form-group">
@@ -746,16 +798,36 @@
                         </li>
                     {/each}
                 </ul>
+                <button on:click={addNewAddress}>Добавить адрес</button> <!-- Новая кнопка -->
                 <button on:click={closeModal}>Закрыть</button>
             </div>
         </div>
-    {/if}
+        {/if}
     </section>
 </main>
 
 <style>
     * {
         box-sizing: border-box;
+    }
+    .default-address-container {
+        margin-top: 10px;
+    }
+
+    .default-address-label {
+        display: inline-flex;
+        align-items: center; 
+        gap: 8px; 
+        cursor: pointer; 
+        font-size: 1rem; 
+        color: rgba(173, 166, 156, 1); 
+    }
+
+    .default-address-label input[type="checkbox"] {
+        margin: 0;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
     }
     .error-message {
         color: red;
@@ -1016,13 +1088,13 @@
     }
 
     .input-wrapper {
-        flex: 1; /* Равномерное распределение пространства */
+        flex: 1; 
         display: flex;
-        flex-direction: column; /* Элементы располагаются вертикально */
+        flex-direction: column; 
     }
 
     .input-wrapper input {
-        width: 100%; /* Ширина поля ввода на 100% */
+        width: 100%; 
     }
 
     .error-message {

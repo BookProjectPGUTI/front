@@ -2,8 +2,9 @@
   import { writable } from "svelte/store";
   import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth';
   import { goto } from '$app/navigation';
+  import { userStore } from '$lib/stores'; 
+
   export let isOpen = writable(false);
-  export let user = writable<{ id: string; username: string; email: string } | null>(null);
 
   let username: string = "";
   let password: string = "";
@@ -12,6 +13,11 @@
   let usernameError = writable<string>("");
   let passwordError = writable<string>("");
   let successMessage = writable<string>("");
+
+  $: if ($isOpen) {
+    successMessage.set("");
+    error.set("");
+  }
 
   const validateUsername = (username: string): string => {
     if (!username.trim()) return 'Поле Никнейм не может быть пустым.';
@@ -44,7 +50,6 @@
     if (usernameValidationError || passwordValidationError) {
       return;
     }
-
     try {
       const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-in", {
         method: "POST",
@@ -75,12 +80,27 @@
             throw new Error("Ошибка входа");
         }
       }
-
       successMessage.set("");
       error.set("");
       successMessage.set("Вы успешно вошли!");
       showPopup.set(true);
-      user.set(data); 
+      userStore.set(data); 
+      try {
+        const userResponse = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          userStore.set(userData); 
+        } else {
+          userStore.set(null); 
+        }
+      } catch (err) {
+        console.error("Ошибка при проверке авторизации:", err);
+        userStore.set(null);
+      }
       setTimeout(() => {
         isOpen.set(false);
       }, 1000);

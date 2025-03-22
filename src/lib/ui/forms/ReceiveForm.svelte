@@ -132,17 +132,76 @@
 {/if}
 
 <style>
-  .form-container {
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #e0f7ff;
+    color: #333;
+  }
+
+  .menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .menu-item {
+    padding: 10px 15px;
+    background: #007bff;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    border: 1px solid #0056b3;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .menu-item:hover {
+    background: #0056b3;
+  }
+
+  .content {
+    background: #ffffff;
+    color: #333;
     padding: 20px;
     border-radius: 10px;
-    max-width: 700px;
+    max-width: 800px;
     width: 100%;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .neon-line {
+    width: 100%;
+    height: 4px;
+    background: #00aaff;
+    box-shadow: 0 0 10px #00aaff, 0 0 20px #00aaff;
+    animation: neonGlow 1.5s infinite alternate;
+  }
+
+  @keyframes neonGlow {
+    0% {
+      box-shadow: 0 0 5px #00aaff, 0 0 10px #00aaff;
+    }
+    100% {
+      box-shadow: 0 0 15px #00aaff, 0 0 30px #00aaff;
+    }
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 700px;
     margin: 20px auto;
+    background: #ffffff;
+    color: #333;
+    padding: 20px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .button-group {
@@ -155,17 +214,17 @@
   .start-exchange-btn {
     flex: 1;
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
   }
 
   .start-exchange-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
+    background: #0056b3;
+    border-color: #004494;
   }
 
   .close-btn {
@@ -173,13 +232,13 @@
     background: none;
     border: none;
     font-size: 20px;
-    color: rgba(173, 166, 156, 1);
+    color: #003366;
     cursor: pointer;
     transition: color 0.2s;
   }
 
   .close-btn:hover {
-    color: rgb(255, 0, 0);
+    color: #ff0000;
   }
 
   .form-content {
@@ -193,7 +252,7 @@
     flex-direction: column;
     max-height: 200px;
     overflow-y: auto;
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 10px;
     border-radius: 5px;
   }
@@ -209,14 +268,14 @@
     width: 16px;
     height: 16px;
     cursor: pointer;
-    accent-color: rgba(173, 166, 156, 1);
+    accent-color: #007bff;
   }
 
   .submit-btn, .back-btn {
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
@@ -224,7 +283,8 @@
   }
 
   .submit-btn:hover, .back-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
+    background: #0056b3;
+    border-color: #004494;
   }
 </style>
+

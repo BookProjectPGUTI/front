@@ -146,7 +146,7 @@
 
   <h2>Хочу обменять книгу</h2>
 
-  <button class="close-btn" on:click={close}>×</button>
+  
 
   <div class="form-content">
     <div class="left-column">
@@ -197,16 +197,17 @@
 
 <style>
   .form-container {
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
+    width: 100%;
+    max-width: 700px;
+    margin: 20px auto;
+    background: #ffffff;
+    color: #333;
     padding: 20px;
     border-radius: 10px;
-    max-width: 700px;
-    width: 100%;
-    margin: 20px auto;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .button-group {
@@ -219,17 +220,17 @@
   .start-exchange-btn {
     flex: 1;
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
   }
 
   .start-exchange-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
+    background: #0056b3;
+    border-color: #004494;
   }
 
   .close-btn {
@@ -237,13 +238,13 @@
     background: none;
     border: none;
     font-size: 20px;
-    color: rgba(173, 166, 156, 1);
+    color: #003366;
     cursor: pointer;
     transition: color 0.2s;
   }
 
   .close-btn:hover {
-    color: rgb(255, 0, 0);
+    color: #ff0000;
   }
 
   .form-content {
@@ -269,9 +270,9 @@
     width: 100%;
     padding: 8px;
     border-radius: 5px;
-    border: 1px solid rgba(173, 166, 156, 0.3);
-    background: rgb(30, 33, 35);
-    color: rgba(173, 166, 156, 1);
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    color: #003366;
   }
 
   .right-column .form-group {
@@ -281,11 +282,16 @@
   .fetch-genres-btn {
     width: 100%;
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
+  }
+
+  .fetch-genres-btn:hover {
+    background: #0056b3;
+    border-color: #004494;
   }
 
   .categories-container label {
@@ -301,15 +307,15 @@
 
   .save-btn {
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
   }
 
   .save-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
+    background: #0056b3;
+    border-color: #004494;
   }
 </style>

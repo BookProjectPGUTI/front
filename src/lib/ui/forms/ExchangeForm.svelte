@@ -160,9 +160,10 @@
   };
 
   const openWantToExchangeForm = () => {
-    currentForm.set("");
     currentForm.set("wantToExchange");
+    console.log('openWantToExchangeForm:', $currentForm);
   };
+  
 
   const openReceiveForm = async () => {
     try {
@@ -258,20 +259,86 @@
     selectedGenres={selectedGenres} 
     updateGenres={updateGenres} />
 {/if}
+{#if $currentForm === "wantToExchange"}
+  <WantToExchangeForm close={close}
+  openExchangeForm={openExchangeForm}
+  openReceiveForm={openReceiveForm}
+  showWantToExchangeForm={true}  
+  bookData={bookData}/>
+{/if}
 
 
 <style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #e0f7ff;
+    color: #333;
+  }
+
+  .menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .menu-item {
+    padding: 10px 15px;
+    background: #007bff;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    border: 1px solid #0056b3;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .menu-item:hover {
+    background: #0056b3;
+  }
+
+  .content {
+    background: #ffffff;
+    color: #333;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .neon-line {
+    width: 100%;
+    height: 4px;
+    background: #00aaff;
+    box-shadow: 0 0 10px #00aaff, 0 0 20px #00aaff;
+    animation: neonGlow 1.5s infinite alternate;
+  }
+
+  @keyframes neonGlow {
+    0% {
+      box-shadow: 0 0 5px #00aaff, 0 0 10px #00aaff;
+    }
+    100% {
+      box-shadow: 0 0 15px #00aaff, 0 0 30px #00aaff;
+    }
+  }
+
   .form-container {
     width: 100%;
     max-width: 700px;
     margin: 20px auto;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
+    background: #ffffff;
+    color: #333;
     padding: 20px;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .form-content {
@@ -295,9 +362,9 @@
 
   .form-group input {
     padding: 8px;
-    border: 1px solid rgba(173, 166, 156, 0.5);
-    background: rgb(50, 53, 55);
-    color: rgba(173, 166, 156, 1);
+    border: 1px solid #cccccc;
+    background: #f9f9f9;
+    color: #333;
     border-radius: 5px;
     outline: none;
   }
@@ -311,16 +378,16 @@
   .button-group {
     display: flex;
     justify-content: space-between;
-    gap: 10px; /* Отступ между кнопками */
+    gap: 10px;
   }
 
   .start-exchange-btn,
   .go-back-btn {
     flex: 1;
     padding: 10px;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
-    border: 1px solid rgba(173, 166, 156, 0.5);
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
@@ -328,7 +395,7 @@
 
   .start-exchange-btn:hover,
   .go-back-btn:hover {
-    background: rgb(50, 53, 55);
-    border-color: rgba(173, 166, 156, 1);
+    background: #0056b3;
+    border-color: #004494;
   }
 </style>

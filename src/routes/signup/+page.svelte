@@ -105,17 +105,17 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: rgba(27,30,31);
+    background-color: rgba(255, 255, 255, 0.9);
   }
 
   .form-wrapper {
-    background: rgba(24,26,27);
+    background: rgb(255, 255, 255);
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-    color: rgba(173, 166, 156, 1);
+    color: #333;
   }
 
   h2 {
@@ -124,11 +124,11 @@
   }
 
   .popup {
-    background: rgba(26, 28, 29);
+    background: rgb(255, 255, 255);
     color: rgba(255, 91, 91, 1);
     padding: 12px 20px;
     border-radius: 6px;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
+    
     font-weight: 600;
     text-align: center;
     margin-bottom: 1rem;
@@ -163,10 +163,10 @@
   input {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid rgba(18,18,18);
+    border: 1px solid rgb(243, 243, 243);
     border-radius: 5px;
-    background-color: rgba(27, 30, 31);
-    color: rgba(173, 166, 156, 1);
+    background-color: rgba(27, 30, 31, 0.1);
+    color: #333;
     box-sizing: border-box;
   }
 
@@ -174,8 +174,8 @@
     width: 100%;
     padding: 0.7rem;
     border: none;
-    background: rgb(232, 121, 62); 
-    color: rgb(0, 0, 0); 
+    background:  #00aaff; 
+    color: rgb(255, 255, 255); 
     font-size: 1rem;
     font-weight: bold;
     border-radius: 8px;
@@ -183,10 +183,10 @@
     transition: background 0.3s ease, transform 0.2s ease;
 }
 
-button:hover {
-    background: rgb(232, 121, 62); 
-    transform: scale(1.05); /* Легкое увеличение */
-}
+.button:hover {
+    background: #00aaff;
+    transform: scale(1.05);
+  }
 
 button:active {
     transform: scale(0.98); /* Небольшое сжатие при нажатии */

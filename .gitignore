@@ -27,6 +27,3 @@ vite.config.ts.timestamp-*
 .dockerignore
 node_modules
 README.md
-
-.idea
-.vscode

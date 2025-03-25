@@ -1,7 +1,8 @@
 <script lang="ts">
   import { writable } from "svelte/store";
   import { fetchWithRefresh } from '$lib/auth';
-  
+  import { userStore, API_BASE_URL } from '$lib/stores'; 
+
   let email: string = "";
   let username: string = "";
   let password: string = "";
@@ -82,7 +83,7 @@
     const payload = { email, username, password };
 
     try {
-      const response = await fetchWithRefresh('http://localhost:8000/api/v1/auth/sign-up', {
+      const response = await fetchWithRefresh(`${API_BASE_URL}/auth/sign-up`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -2,7 +2,7 @@
   import { writable } from "svelte/store";
   import { fetchWithRefresh, getTokenExpiration, scheduleTokenRefresh } from '$lib/auth';
   import { goto } from '$app/navigation';
-  import { userStore } from '$lib/stores'; 
+  import { userStore, API_BASE_URL } from '$lib/stores'; 
 
   export let isOpen = writable(false);
 
@@ -51,7 +51,7 @@
       return;
     }
     try {
-      const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-in", {
+      const response = await fetchWithRefresh(`${API_BASE_URL}/auth/sign-in`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -86,7 +86,7 @@
       showPopup.set(true);
       userStore.set(data); 
       try {
-        const userResponse = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
+        const userResponse = await fetchWithRefresh(`${API_BASE_URL}/users/me`, {
           method: "GET",
           credentials: "include",
         });

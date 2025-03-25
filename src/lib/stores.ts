@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { fetchWithRefresh } from './auth';
 
 type User = {
     id: string;
@@ -13,3 +14,5 @@ type User = {
 export const userStore = writable<User | null>(null);
 
 export const isLoginOpen = writable(false); 
+
+export const API_BASE_URL = "http://localhost:8000/api/v1";

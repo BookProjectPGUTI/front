@@ -6,6 +6,7 @@
   import { userStore } from '$lib/stores'; 
 
   let isLoginOpen = writable(false);
+  let userLoaded = false;
 
   onMount(async () => {
     try {
@@ -23,7 +24,10 @@
     } catch (err) {
       console.error("Ошибка при проверке авторизации:", err);
       userStore.set(null);
+    } finally {
+      userLoaded = true;
     }
+
   });
 
   const handleLogout = async () => {

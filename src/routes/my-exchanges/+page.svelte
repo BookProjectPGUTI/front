@@ -1,6 +1,7 @@
 <script lang="ts">
   import { userStore, API_BASE_URL } from '$lib/stores'; 
   import { onMount } from 'svelte';
+  import '@fortawesome/fontawesome-free/css/all.css';
 
   let activeTab = 'offers'; 
   let exchangeMakers: any[] = [];
@@ -10,6 +11,10 @@
   let isTaker = false; 
   let isInitialLoad = true;
   let selectedMakerId: string | null = null;
+
+  let trackNumber = '';
+  let isTrackNumberValid = false;
+  let isTrackNumberSubmitted = false;
 
   let currentUser: any;
   let isFirstLoad = true;
@@ -43,6 +48,35 @@
     };
   });
 
+  function validateTrackNumber() {
+    isTrackNumberValid = /^\d{14}$/.test(trackNumber);
+  }
+
+  async function submitTrackNumber() {
+    if (!isTrackNumberValid) return;
+    
+    isLoading = true;
+    try {
+      const response = await fetch(`${API_BASE_URL}/exchanges/track-number`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        credentials: "include",
+        body: JSON.stringify({ track_number: trackNumber })
+      });
+
+      if (response.ok) {
+        isTrackNumberSubmitted = true;
+        await checkUserStatus();
+      } else {
+        console.error('Ошибка при отправке трек-номера');
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+    } finally {
+      isLoading = false;
+    }
+  }
+
   async function checkUserStatus() {
     if (!currentUser) return;
     
@@ -59,7 +93,6 @@
         isMaker = data.maker?.user.username === currentUser?.username;
         isTaker = data.taker?.user.username === currentUser?.username;
         
-        // If there's an active exchange, switch to the active tab
         if (currentExchange) {
           activeTab = 'active';
         }
@@ -130,7 +163,13 @@
     try {
       const response = await fetch(`${API_BASE_URL}/exchanges`, {
         method: 'DELETE',
-        credentials: "include"
+        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_role: isMaker ? 'maker' : 'taker'
+        })
       });
 
       if (response.status === 204) {
@@ -141,43 +180,55 @@
           await fetchExchangeMakers();
         }
       } else {
-        console.error('Ошибка при отмене обмена');
+        const errorData = await response.json();
+        console.error('Ошибка при отмене обмена:', errorData);
+        alert(`Ошибка при отмене обмена: ${errorData.detail || 'Неизвестная ошибка'}`);
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
+      alert('Ошибка сети при попытке отменить обмен');
     } finally {
       isLoading = false;
     }
   }
 
-  async function becomeTaker() {
-    if (!selectedMakerId || isTaker) return;
+  async function becomeTaker(makerId: string) {
+    if (isTaker) return;
     
     isLoading = true;
     try {
-      const response = await fetch(`${API_BASE_URL}/exchanges/takers`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: "include",
-        body: JSON.stringify({ maker_id: selectedMakerId }),
-      });
+        const response = await fetch(`${API_BASE_URL}/exchanges/takers`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: "include",
+            body: JSON.stringify({ maker_id: makerId }),
+        });
 
-      if (response.ok) {
-        isTaker = true;
-        await checkUserStatus();
-        selectedMakerId = null;
-        activeTab = 'active';
-      } else {
-        console.error('Ошибка при попытке стать тейкером');
-        const errorData = await response.json();
-        console.error('Детали ошибки:', errorData);
-      }
+        if (response.ok) {
+            isTaker = true;
+            selectedMakerId = makerId;
+            await checkUserStatus();
+            activeTab = 'active';
+            
+            const selectedMaker = exchangeMakers.find(m => m.id === makerId);
+            if (selectedMaker) {
+                selectedMaker.notification = {
+                    message: 'Вас выбрали на обмен!',
+                    show: true
+                };
+                exchangeMakers = exchangeMakers;
+            }
+        } else {
+            console.error('Ошибка при попытке стать тейкером');
+            const errorData = await response.json();
+            console.error('Детали ошибки:', errorData);
+        }
     } catch (error) {
-      console.error('Ошибка сети:', error);
+        console.error('Ошибка сети:', error);
     } finally {
-      isLoading = false;
+        isLoading = false;
     }
-  }
+}
 
   function selectMaker(makerId: string) {
     selectedMakerId = makerId;
@@ -190,10 +241,12 @@
               method: 'PUT',
               headers: {'Content-Type': 'application/json'},
               credentials: "include",
-              body: JSON.stringify({ userId: currentUser.id }),
+              body: JSON.stringify({ is_accepted: true })
           });
+          
           if (response.ok) {
-              await checkUserStatus();
+              currentExchange.accepted = true;
+              document.querySelector('.their-book')?.classList.add('accepted');
           } else {
               console.error('Ошибка при подтверждении обмена');
           }
@@ -258,16 +311,34 @@
                     <button on:click={becomeMaker} class="action-button">Ожидать пару</button>
                 {:else if isMaker}
                     <button on:click={cancelExchange} class="action-button cancel">Остановить поиск</button>
-                {:else if isTaker}
-                    <p class="status-message">Вы выбрали партнера для обмена. Ожидайте подтверждения.</p>
-                {/if}
+                  {:else if isTaker}
+                    <div class="exchange-notification">
+                      <p class="status-message">
+                        Вы выбрали партнера для обмена. Ожидайте подтверждения или отмените обмен. 
+                        <!-- svelte-ignore a11y_invalid_attribute -->
+                        <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
+                      </p>
+                    </div>
+                  {/if}
                 
                 {#if isMaker}
+                {#if currentExchange}
+                <div class="exchange-notification">
+                  <p class="status-message">
+                    Вам предложили обмен. 
+                    <!-- svelte-ignore a11y_invalid_attribute -->
+                    <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
+                  </p>
+                </div>
+              {:else}
                 <p class="status-message">Вы стали мейкером, ожидайте предложение на обмен.</p>
+              {/if}
             {:else if !isTaker}
                 <h3>Доступные варианты для обмена</h3>
                 <div class="exchange-list compact">
                     {#each exchangeMakers as maker (maker.id)}
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         {#if maker.id !== currentUser?.id}
                             <div class="exchange-item compact {selectedMakerId === maker.id ? 'selected' : ''}"
                                  on:click={() => selectMaker(maker.id)}>
@@ -286,11 +357,12 @@
                                         </span>
                                     </div>
                                 </div>
+                                  <!-- svelte-ignore a11y_consider_explicit_label -->
                                   <button 
-                                    on:click|preventDefault={() => becomeTaker()} 
+                                    on:click|preventDefault={() => becomeTaker(maker.id)} 
                                     class="accept-button"
                                     title="Выбрать для обмена">
-                                    ✓
+                                    <i class="fas fa-handshake"></i>
                                   </button>
                             </div>
                         {/if}
@@ -304,52 +376,90 @@
               <div class="active-exchanges">
                 <h2>Активные обмены</h2>
                 {#if currentExchange}
-                  <div class="exchange-details">
-                    <div class="exchange-books">
-                      <!-- User's book (either maker or taker) -->
-                      <div class="book-card {isMaker ? 'my-book' : 'their-book'}">
-                        <h3>{isMaker ? 'Ваша книга' : 'Книга для обмена'}</h3>
-                        <div class="book-info">
-                          <p class="book-title">{currentExchange.maker.book.name}</p>
-                          <p class="book-author">{currentExchange.maker.book.author.first_name} {currentExchange.maker.book.author.last_name}</p>
-                        </div>
-                        <div class="user-info">
-                          <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
-                          <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
-                        </div>
+                <div class="exchange-details">
+                  <div class="exchange-books">
+                    <!-- User's book (either maker or taker) -->
+                    <div class="book-card {isMaker ? 'my-book' : 'their-book'} {currentExchange.accepted ? 'accepted' : ''}">
+                      <h3>{isMaker ? 'Ваша книга' : 'Книга для обмена'}</h3>
+                      <div class="book-info">
+                        <p class="book-title">{currentExchange.maker.book.name}</p>
+                        <p class="book-author">{currentExchange.maker.book.author.first_name} {currentExchange.maker.book.author.last_name}</p>
                       </div>
-                      
-                      <!-- Partner's book -->
-                      {#if currentExchange.taker}
-                        <div class="book-card {isTaker ? 'my-book' : 'their-book'}">
-                          <h3>{isTaker ? 'Ваша книга' : 'Книга партнера'}</h3>
-                          <div class="book-info">
-                            <p class="book-title">{currentExchange.taker.book.name}</p>
-                            <p class="book-author">{currentExchange.taker.book.author.first_name} {currentExchange.taker.book.author.last_name}</p>
-                          </div>
-                          <div class="user-info">
-                            <p class="user-name">{currentExchange.taker.user.first_name} {currentExchange.taker.user.last_name}</p>
-                            <p class="user-rating">★ {currentExchange.taker.user.rating}</p>
-                          </div>
-                        </div>
-                      {:else}
-                        <div class="waiting-partner">
-                          <p>Ожидание выбора книги партнером...</p>
+                      <div class="user-info">
+                        <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
+                        <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
+                      </div>
+                      {#if currentExchange.accepted && (isMaker || isTaker)}
+                        <div class="track-number-section">
+                          {#if currentExchange.track_number}
+                            <p class="track-number">Трек-номер: {currentExchange.track_number}</p>
+                          {:else if (isMaker && !currentExchange.maker_track_number) || (isTaker && !currentExchange.taker_track_number)}
+                            <div class="track-number-input">
+                              <input 
+                                type="text" 
+                                bind:value={trackNumber}
+                                on:input={validateTrackNumber}
+                                placeholder="Введите 14-значный трек-номер"
+                                maxlength="14"
+                              />
+                              {#if trackNumber && !isTrackNumberValid}
+                                <p class="error-message">Трек-номер должен содержать ровно 14 цифр</p>
+                              {/if}
+                              <button 
+                                on:click={submitTrackNumber} 
+                                disabled={!isTrackNumberValid}
+                                class="action-button"
+                              >
+                                Отправить трек-номер
+                              </button>
+                            </div>
+                          {/if}
                         </div>
                       {/if}
                     </div>
                     
-                    <div class="exchange-actions">
-                      {#if isMaker && !currentExchange.accepted}
-                        <button on:click={acceptExchange} class="action-button">
-                          Подтвердить обмен
-                        </button>
-                      {/if}
-                      <button on:click={cancelExchange} class="action-button cancel">
-                        Отменить обмен
-                      </button>
-                    </div>
+                    <!-- Partner's book -->
+                    {#if currentExchange.taker}
+                      <div class="book-card {isTaker ? 'my-book' : 'their-book'} {currentExchange.accepted ? 'accepted' : ''}">
+                        <h3>{isTaker ? 'Ваша книга' : 'Книга партнера'}</h3>
+                        <div class="book-info">
+                          <p class="book-title">{currentExchange.taker.book.name}</p>
+                          <p class="book-author">{currentExchange.taker.book.author.first_name} {currentExchange.taker.book.author.last_name}</p>
+                        </div>
+                        <div class="user-info">
+                          <p class="user-name">{currentExchange.taker.user.first_name} {currentExchange.taker.user.last_name}</p>
+                          <p class="user-rating">★ {currentExchange.taker.user.rating}</p>
+                        </div>
+                        {#if currentExchange.accepted}
+                          <div class="track-number-section">
+                            {#if (isMaker && currentExchange.taker_track_number) || (isTaker && currentExchange.maker_track_number)}
+                              <p class="track-number">
+                                Трек-номер: {isMaker ? currentExchange.taker_track_number : currentExchange.maker_track_number}
+                              </p>
+                            {:else}
+                              <p class="track-number-status">Трек-номер еще не добавлен</p>
+                            {/if}
+                          </div>
+                        {/if}
+                      </div>
+                    {:else}
+                      <div class="waiting-partner">
+                        <p>Ожидание выбора книги партнером...</p>
+                      </div>
+                    {/if}
                   </div>
+                  
+                  <div class="exchange-actions">
+                    {#if isMaker && !currentExchange.accepted}
+                      <button on:click={acceptExchange} class="action-button">
+                        Подтвердить обмен
+                      </button>
+                    {/if}
+                    <button on:click={cancelExchange} class="action-button cancel">
+                      Отменить обмен
+                    </button>
+                  </div>
+                </div>
                 {:else}
                   <p>Нет активных обменов</p>
                   {#if isMaker || isTaker}
@@ -359,13 +469,56 @@
                   {/if}
                 {/if}
               </div>
+              {/if}
             {/if}
-          {/if}
-        </section>
-  </div>
-</main>
+          </section>
+        </main>
 
 <style>
+   .track-number-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(173, 166, 156, 0.2);
+  }
+
+  .track-number-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .track-number-input input {
+    padding: 8px 12px;
+    background: rgb(60, 63, 65);
+    border: 1px solid rgba(173, 166, 156, 0.3);
+    border-radius: 4px;
+    color: rgba(173, 166, 156, 1);
+  }
+
+  .track-number-input input:focus {
+    outline: none;
+    border-color: rgba(173, 166, 156, 0.6);
+  }
+
+  .error-message {
+    color: #ff6b6b;
+    font-size: 0.8em;
+    margin-top: -5px;
+  }
+
+  .track-number {
+    color: rgba(173, 166, 156, 0.9);
+    font-size: 0.9em;
+    word-break: break-all;
+  }
+
+  .track-number-status {
+    color: rgba(173, 166, 156, 0.6);
+    font-size: 0.9em;
+    font-style: italic;
+  }
+
   .container {
       display: flex;
       flex-direction: column;
@@ -599,7 +752,10 @@
   .book-card.their-book {
       border-left: 4px solid rgb(100, 60, 100);
   }
-
+  .book-card.their-book.accepted {
+      border-left: 4px solid rgb(60, 160, 60);
+      box-shadow: 0 0 0 2px rgba(60, 160, 60, 0.3);
+  }
   .book-info {
       margin-bottom: 15px;
   }
@@ -642,5 +798,18 @@
       display: flex;
       gap: 10px;
       margin-top: 20px;
+  }
+  .exchange-notification {
+    margin-bottom: 15px;
+  }
+  .view-link {
+    color: #a5b4fc;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+  .view-link:hover {
+    color: #818cf8;
+    text-decoration: none;
   }
 </style>

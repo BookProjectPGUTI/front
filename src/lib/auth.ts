@@ -1,4 +1,4 @@
-import { userStore } from './stores'; 
+import { userStore, API_BASE_URL } from '$lib/stores'; 
 
 let refreshTimer: number | null = null; 
 
@@ -41,7 +41,7 @@ export const getTokenExpiration = (token: string): number | null => {
 
 export const refreshTokens = async (): Promise<{ accessToken: string; refreshToken: string } | null> => {
   try {
-    const response = await fetch("http://localhost:8000/api/v1/auth/refresh", {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
       credentials: "include",
     });

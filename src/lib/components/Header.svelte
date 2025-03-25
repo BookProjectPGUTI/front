@@ -3,14 +3,14 @@
   import { writable } from "svelte/store";
   import { onMount } from 'svelte';
   import { fetchWithRefresh, clearRefreshTimer } from '$lib/auth';
-  import { userStore } from '$lib/stores'; 
+  import { userStore, API_BASE_URL } from '$lib/stores'; 
 
   let isLoginOpen = writable(false);
   let userLoaded = false;
 
   onMount(async () => {
     try {
-      const response = await fetchWithRefresh("http://localhost:8000/api/v1/users/me", {
+      const response = await fetchWithRefresh(`${API_BASE_URL}/users/me`, {
         method: "GET",
         credentials: "include",
       });
@@ -32,7 +32,7 @@
 
   const handleLogout = async () => {
     try {
-      const response = await fetchWithRefresh("http://localhost:8000/api/v1/auth/sign-out", {
+      const response = await fetchWithRefresh(`${API_BASE_URL}/auth/sign-out`, {
         method: "DELETE",
       });
 

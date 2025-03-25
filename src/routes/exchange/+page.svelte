@@ -1,8 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";  
-    import { userStore } from '$lib/stores'; 
+    import { userStore, API_BASE_URL } from '$lib/stores'; 
   
-    const API_BASE_URL = "http://localhost:8000/api/v1";
     let activeTab = "exchange";
     let genres: { id: number, name: string }[] = [];
     let showGenres = false;

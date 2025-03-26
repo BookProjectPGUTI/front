@@ -1020,7 +1020,7 @@
         gap: 8px;
         padding: 5px 0;
         font-size: 14px;
-        color: white;
+        color: rgb(0, 0, 0);
         border-radius: 5px;
         transition: background-color 0.3s ease, border-color 0.3s ease;
     }

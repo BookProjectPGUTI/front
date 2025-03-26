@@ -118,17 +118,17 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: rgba(27,30,31);
+    background-color: rgba(255, 255, 255, 0.9);
   }
 
   .form-wrapper {
-    background: rgba(24,26,27);
+    background: rgb(255, 255, 255);
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 400px;
-    color: rgba(173, 166, 156, 1);
+    color: #333;
   }
 
   h2 {
@@ -136,30 +136,35 @@
     margin-bottom: 0.5rem;
   }
 
+  .popup {
+    background: rgb(255, 255, 255);
+    color: rgba(255, 91, 91, 1);
+    padding: 12px 20px;
+    border-radius: 6px;
+    
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .popup.show {
+    display: block;
+  }
+
+  .success {
+    background: rgba(26, 28, 29);
+    color: rgba(0, 255, 0, 1);
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
   .form-group {
     margin-bottom: 1rem;
-    position: relative;
-  }
-
-  .error-message {
-    color: #ff6b6b;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-
-  .error-message.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .success-message {
-    color: #4caf50;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    text-align: center;
   }
 
   label {
@@ -171,10 +176,10 @@
   input {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid rgba(18,18,18);
+    border: 1px solid rgb(243, 243, 243);
     border-radius: 5px;
-    background-color: rgba(27, 30, 31);
-    color: rgba(173, 166, 156, 1);
+    background-color: rgba(27, 30, 31, 0.1);
+    color: #333;
     box-sizing: border-box;
   }
 
@@ -182,17 +187,24 @@
     width: 100%;
     padding: 0.7rem;
     border: none;
-    background: #007bff;
-    color: rgba(18,18,18);
+    background:  #00aaff; 
+    color: rgb(255, 255, 255); 
     font-size: 1rem;
-    border-radius: 5px;
+    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    box-sizing: border-box;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.button:hover {
+    background: #00aaff;
+    transform: scale(1.05);
   }
 
-  button:hover {
-    background: #0056b3;
-  }
+button:active {
+    transform: scale(0.98); /* Небольшое сжатие при нажатии */
+}
+
 </style>
 
 <div class="container">

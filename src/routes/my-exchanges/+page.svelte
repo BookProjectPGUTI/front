@@ -556,17 +556,18 @@
   }
 
   .menu-item {
-    padding: 10px 15px;
-    background: rgb(42, 45, 47);
-    border-radius: 8px;
-    text-decoration: none;
-    color: rgba(173, 166, 156, 1);
-  }
-
-  .menu-item:hover {
-    background: rgb(50, 53, 55);
-  }
-
+        padding: 10px 15px;
+        background:  #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #000000;
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .menu-item:hover {
+        background: #ccc;
+        border-color: #ccc;
+    }
   .layout {
     display: flex;
     width: 100%;
@@ -579,7 +580,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: rgb(42, 45, 47);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 10px;
   }
@@ -587,40 +588,40 @@
   .user-info {
     margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(173, 166, 156, 0.2);
+    border-bottom: 1px solid #000000;
   }
 
   .username, .name {
     font-size: 16px;
     margin: 0;
-    color: rgba(173, 166, 156, 1);
+    color: #000000;
   }
 
   .rating {
     font-size: 14px;
     margin: 5px 0 0;
-    color: rgba(173, 166, 156, 0.8);
+    color: #000000;
   }
 
   .sidebar-item {
     padding: 10px 15px;
-    background: rgb(50, 53, 55);
+    background:  #00aaff;
     border-radius: 8px;
     text-decoration: none;
-    color: rgba(173, 166, 156, 1);
+    color:  #ffffff;
     cursor: pointer;
     text-align: left;
     border: none;
   }
 
   .sidebar-item.active {
-    background: rgb(60, 63, 65);
+    background: #4da6ff;
   }
 
   .content {
     flex: 1;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
+    background:#f9f9f9  ;
+    color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 10px;
   }
@@ -640,7 +641,7 @@
   }
 
   .exchange-item {
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
     display: grid;
@@ -672,7 +673,7 @@
 
   .user-rating {
     font-size: 0.9em;
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .book-info-compact {
@@ -688,7 +689,7 @@
 
   .book-author {
     font-size: 0.9em;
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .genre-matches {
@@ -722,17 +723,17 @@
 
   .action-button {
     padding: 10px 15px;
-    background: rgb(60, 63, 65);
+    background:  #00aaff;
     border: none;
     border-radius: 8px;
-    color: rgba(173, 166, 156, 1);
+    color: #ffffff;
     cursor: pointer;
     margin-top: 10px;
     width: fit-content;
   }
 
   .action-button:hover {
-    background: rgb(70, 73, 75);
+    background: #4da6ff;
   }
 
   .action-button.cancel {
@@ -752,7 +753,7 @@
   }
 
   .status-message {
-    color: rgba(173, 166, 156, 1);
+    color: rgb(0, 0, 0);
     font-style: italic;
     margin-bottom: 15px;
   }
@@ -770,7 +771,7 @@
   }
 
   .book-card {
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
     position: relative;
@@ -800,13 +801,13 @@
   }
 
   .book-author {
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .user-info {
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid rgba(173, 166, 156, 0.2);
+    border-top: 1px solid #f9f9f9;
   }
 
   .user-name {
@@ -814,17 +815,17 @@
   }
 
   .user-rating {
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .waiting-partner {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .exchange-actions {

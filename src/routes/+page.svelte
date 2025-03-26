@@ -14,39 +14,47 @@
   </main>
   
   <style>
+
 	.container {
 	  display: flex;
 	  flex-direction: column;
 	  align-items: center;
 	  padding: 20px;
+	  background: #f9f9f9;
+	  color: #333;
 	}
   
 	.menu {
 	  display: flex;
 	  gap: 10px;
 	  margin-bottom: 20px;
+	  background: #fff;
 	}
   
 	.menu-item {
 	  padding: 10px 15px;
-	  background: rgb(42, 45, 47);
+	  background: #fff;
 	  border-radius: 8px;
 	  text-decoration: none;
-	  color:  rgba(173, 166, 156, 1);
+	  color: #333;
+	  border: 1px solid #ccc;
+	  cursor: pointer;
+	  transition: background 0.3s, color 0.3s;
 	}
   
 	.menu-item:hover {
-	  background: rgb(50, 53, 55); 
+	  background: #eee;
 	}
   
 	.content {
-	  background: rgb(42, 45, 47); 
-	  color:  rgba(173, 166, 156, 1);
+	  background: #fff;
+	  color: #333;
 	  padding: 20px;
 	  border-radius: 10px;
 	  max-width: 800px;
 	  width: 100%;
 	  text-align: center;
+	  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	}
   </style>
   

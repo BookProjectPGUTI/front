@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import { fetchWithRefresh, clearRefreshTimer } from '$lib/auth';
   import { userStore, API_BASE_URL } from '$lib/stores'; 
-
+  import logo from '$lib/images/log.png'
   let isLoginOpen = writable(false);
   let userLoaded = false;
 
@@ -50,18 +50,23 @@
 </script>
 
 <header>
-  <a href="/"> <div class="logo">Логотип</div></a> 
+  <a href="/">
+    <div class="logo">
+      <img src={logo} alt="Логотип" />
+    </div>
+    
+  </a> 
   <nav>
     {#if $userStore}
       <span>{$userStore.username}</span>
       <button on:click={handleLogout}>Выйти</button>
     {:else}
-      <a href="/signup">Регистрация</a>
-      <button on:click={() => isLoginOpen.set(true)}>Войти</button>
+      <a href="/signup" class="styled-btn">Регистрация</a>
+      <button class="styled-btn" on:click={() => isLoginOpen.set(true)}>Войти</button>
     {/if}
   </nav>
 </header>
-
+<div class="neon-line"></div>
 <Login bind:isOpen={isLoginOpen} />
 
 <style>
@@ -69,30 +74,68 @@
     display: flex;
     justify-content: space-between;
     padding: 10px 20px;
-    background: rgba(24, 26, 27, 1);  
-    color: rgba(173, 166, 156, 1);  
+    background: rgb(255, 255, 255);
+    color: rgba(173, 166, 156, 1);
     border-radius: 10px;
   }
 
-  a {
-    text-decoration: none;
-    color: rgba(173, 166, 156, 1); 
-    margin: 0 1rem;
-    font-size: 1.1rem;
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgba(173, 166, 156, 1);
   }
 
-  button {
-    background-color: rgba(0, 86, 179);
-    color: rgba(18,18,18);
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .styled-btn {
+    display: inline-block;
+    text-decoration: none;
+    background: #00aaff;
+    color: rgb(255, 255, 255);
     border: none;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
   }
 
-  button:hover {
-    background-color: rgba(173, 166, 156, 0.8);
+  .styled-btn:hover {
+    background: #00aaff;
+    transform: scale(1.05);
   }
+
+  
+  .neon-line {
+    width: 100%;
+    height: 4px;
+    background: #00aaff;
+    box-shadow: 0 0 10px #00aaff, 0 0 20px #00aaff;
+    animation: neonGlow 1.5s infinite alternate;
+  }
+
+  @keyframes neonGlow {
+    0% {
+      box-shadow: 0 0 5px #00aaff, 0 0 10px #00aaff;
+    }
+    100% {
+      box-shadow: 0 0 15px #00aaff, 0 0 30px #00aaff;
+    }
+  }
+  .logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Устанавливаем высоту, чтобы картинка не нарушала структуру хедера */
+ 
+}
+  .logo img {
+  max-width: 30%;
+  height: auto;
+  margin-left: -10px
+}
 </style>

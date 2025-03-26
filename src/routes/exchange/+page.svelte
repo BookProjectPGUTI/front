@@ -686,7 +686,7 @@
         </div>
         {/if}
         {#if activeTab === 'address'}
-        <button on:click={openModal}>Выбрать адрес</button>
+        <button class="tab-button" on:click={openModal}>Выбрать адрес</button>
         <div class="address-container">
             <div class="address-column">
                 <div class="form-group">
@@ -819,7 +819,7 @@
         gap: 8px; 
         cursor: pointer; 
         font-size: 1rem; 
-        color: rgba(173, 166, 156, 1); 
+        color: #333; 
     }
 
     .default-address-label input[type="checkbox"] {
@@ -839,13 +839,13 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: #fff;
         display: flex;
         justify-content: center;
         align-items: center;
     }
     .modal {
-        background-color: white;
+        background-color: #fff;
         padding: 20px;
         border-radius: 8px;
         max-width: 400px;
@@ -891,7 +891,8 @@
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        color: rgba(173, 166, 156, 1);
+        color:#333;
+        background: #f9f9f9;
     }
     .menu {
         display: flex;
@@ -900,19 +901,19 @@
     }
     .menu-item {
         padding: 10px 15px;
-        background: rgb(42, 45, 47);
+        background:  #fff;
         border-radius: 8px;
         text-decoration: none;
-        color: rgba(173, 166, 156, 1);
+        color: #333;
         border: 2px solid transparent;
         transition: border-color 0.3s ease, background-color 0.3s ease;
     }
     .menu-item:hover {
-        background: rgb(50, 53, 55);
-        border-color: #4da6ff;
+        background: #ccc;
+        border-color: #ccc;
     }
     .exchange-form {
-        background: rgb(42, 45, 47);
+        background: #fff;
         padding: 20px;
         border-radius: 10px;
         max-width: 800px;
@@ -940,11 +941,11 @@
         transition: border-color 0.3s ease, background-color 0.3s ease;
     }
     .tab-button:hover {
-        background: rgb(60, 63, 65);
+        background: #00aaff;
         border-color: #4da6ff;
     }
     .active-tab {
-        background: rgb(80, 120, 200);
+        background: #00aaff;
         color: white;
         font-weight: bold;
         border: 2px solid #4da6ff;
@@ -976,16 +977,16 @@
         margin-top: 5px;
         border: 1px solid gray;
         border-radius: 5px;
-        background: rgb(50, 50, 50);
-        color: white;
+        background: #f9f9f9;
+        color: #333;
         transition: border-color 0.3s ease;
     }
     input:focus {
-        border-color: #4da6ff;
+        border-color: #00aaff;
         outline: none;
     }
     .genre-button {
-        color: #4da6ff;
+        color: #00aaff;
         cursor: pointer;
         font-weight: bold;
         border: 2px solid transparent;
@@ -994,13 +995,13 @@
         transition: color 0.3s ease, border-color 0.3s ease;
     }
     .genre-button:hover {
-        color: #1a75ff;
+        color: #00aaff;
         border-color: #4da6ff;
     }
     .dropdown-content {
         position: relative;
         width: 100%;
-        background: #323232;
+        background: #fff;
         border: 1px solid gray;
         border-radius: 8px;
         padding: 10px;
@@ -1041,7 +1042,7 @@
     }
     .back-button, .next-button {
         padding: 8px 15px;
-        background: rgb(100, 100, 255);
+        background: #00aaff;
         color: white;
         border: 2px solid transparent;
         border-radius: 5px;
@@ -1050,7 +1051,7 @@
         transition: border-color 0.3s ease, background-color 0.3s ease;
     }
     .back-button:hover, .next-button:hover {
-        background: rgb(80, 80, 230);
+        background: #4da6ff;
         border-color: #4da6ff;
     }
     .back-button {

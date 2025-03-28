@@ -893,6 +893,7 @@
         padding: 20px;
         color:#333;
         background: #f9f9f9;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu {
         display: flex;
@@ -907,6 +908,7 @@
         color: #333;
         border: 2px solid transparent;
         transition: border-color 0.3s ease, background-color 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu-item:hover {
         background: #ccc;
@@ -920,6 +922,7 @@
         width: 100%;
         position: relative;
         height: 680px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .form-title {
         text-align: center;

@@ -554,12 +554,16 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
+    background:  #f9f9f9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    
   }
 
   .menu {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .menu-item {
@@ -570,6 +574,7 @@
         color: #000000;
         border: 2px solid transparent;
         transition: border-color 0.3s ease, background-color 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu-item:hover {
         background: #ccc;
@@ -587,9 +592,11 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: #f9f9f9;
+    background: #fff;
     padding: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    
   }
 
   .user-info {
@@ -627,10 +634,11 @@
 
   .content {
     flex: 1;
-    background:#f9f9f9  ;
+    background:#fff  ;
     color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .exchange-offers, .active-exchanges {

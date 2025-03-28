@@ -18,6 +18,7 @@
 
   let trackNumber = '';
   let trackNumberError = '';
+  let exchangeHistory: any[] = []; // Для хранения истории обменов
 
   async function loadInitialData() {
     await checkUserStatus();
@@ -91,11 +92,34 @@
         const data = await response.json();
         exchangeMakers = data.makers || [];
         exchangeMakers.sort((a, b) =>
-          Math.max(b.taker_genre_matches?.length || 0, b.maker_genre_matches?.length || 0) -
+          Math.max(b.taker_genre_matches?.length || 0, b.maker_genre_matches?.length || 0) - 
           Math.max(a.taker_genre_matches?.length || 0, a.maker_genre_matches?.length || 0)
         );
       } else {
         console.error('Ошибка при загрузке предложений на обмен');
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  async function fetchExchangeHistory() {
+    if (!currentUser) return;
+
+    isLoading = true;
+    try {
+      const response = await fetch(`${API_BASE_URL}/exchanges/history`, {
+        credentials: "include",
+        headers: {'Accept': 'application/json'}
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        exchangeHistory = data.history || [];
+      } else {
+        console.error('Ошибка при загрузке истории обменов');
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
@@ -300,6 +324,8 @@
 
     if (tab === 'offers' && !isInitialLoad) {
       fetchExchangeMakers().finally(() => isLoading = false);
+    } else if (tab === 'history') {
+      fetchExchangeHistory().finally(() => isLoading = false);
     } else {
       isLoading = false;
     }
@@ -307,6 +333,7 @@
     isInitialLoad = false;
   }
 </script>
+
 
 <main class="container">
   <nav class="menu">
@@ -332,6 +359,7 @@
 
       <button class="sidebar-item {activeTab === 'offers' ? 'active' : ''}" on:click={() => handleTabChange('offers')}>Предложения на обмен</button>
       <button class="sidebar-item {activeTab === 'active' ? 'active' : ''}" on:click={() => handleTabChange('active')}>Активные обмены</button>
+      <button class="sidebar-item {activeTab === 'history' ? 'active' : ''}" on:click={() => handleTabChange('history')}>История обменов</button>
     </aside>
 
     <section class="content">
@@ -345,12 +373,11 @@
             {#if !isMaker && !isTaker}
               <button on:click={becomeMaker} class="action-button">Ожидать пару</button>
             {:else if isMaker}
-              <button on:click={cancelExchange} class="action-button cancel">Остановить поиск</button>
+              <button on:click={cancelExchange} class="action-button cancel">Остановить поиск</button>      
             {:else if isTaker}
               <div class="exchange-notification">
                 <p class="status-message">
                   Вы выбрали партнера для обмена. Ожидайте подтверждения или отмените обмен.
-                  <!-- svelte-ignore a11y_invalid_attribute -->
                   <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
                 </p>
               </div>
@@ -361,7 +388,6 @@
                 <div class="exchange-notification">
                   <p class="status-message">
                     Вам предложили обмен.
-                    <!-- svelte-ignore a11y_invalid_attribute -->
                     <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
                   </p>
                 </div>
@@ -372,11 +398,8 @@
               <h3>Доступные варианты для обмена</h3>
               <div class="exchange-list compact">
                 {#each exchangeMakers as maker (maker.id)}
-                  <!-- svelte-ignore a11y_click_events_have_key_events -->
-                  <!-- svelte-ignore a11y_no_static_element_interactions -->
                   {#if maker.id !== currentUser?.id}
-                    <div class="exchange-item compact {selectedMakerId === maker.id ? 'selected' : ''}"
-                         on:click={() => selectMaker(maker.id)}>
+                    <div class="exchange-item compact {selectedMakerId === maker.id ? 'selected' : ''}" on:click={() => selectMaker(maker.id)}>
                       <div class="exchange-summary">
                         <div class="user-info-compact">
                           <span class="user-name">{maker.user.first_name} {maker.user.last_name}</span>
@@ -392,11 +415,7 @@
                           </span>
                         </div>
                       </div>
-                      <!-- svelte-ignore a11y_consider_explicit_label -->
-                      <button
-                        on:click|preventDefault={() => becomeTaker(maker.id)}
-                        class="accept-button"
-                        title="Выбрать для обмена">
+                      <button on:click|preventDefault={() => becomeTaker(maker.id)} class="accept-button" title="Выбрать для обмена">
                         <i class="fas fa-handshake"></i>
                       </button>
                     </div>
@@ -405,6 +424,23 @@
                   <p>Нет доступных предложений для обмена.</p>
                 {/each}
               </div>
+            {/if}
+          </div>
+        {:else if activeTab === 'history'}
+          <div class="exchange-history">
+            <h2>История обменов</h2>
+            {#if exchangeHistory.length === 0}
+              <p>История обменов пуста.</p>
+            {:else}
+              <ul>
+                {#each exchangeHistory as exchange}
+                  <li>
+                    <p>Обмен с {exchange.partner.username}</p>
+                    <p>Статус: {exchange.status}</p>
+                    <p>Дата завершения: {new Date(exchange.completedAt).toLocaleDateString()}</p>
+                  </li>
+                {/each}
+              </ul>
             {/if}
           </div>
         {:else}
@@ -424,23 +460,14 @@
                       <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
                       <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
                     </div>
-
                     {#if currentExchange.maker.is_accepted && isMaker && !currentExchange.maker.track_number}
                       <div class="track-number-input">
                         <label for="track-number-maker">Трек-номер посылки (14 символов)</label>
-                        <input
-                          id="track-number-maker"
-                          type="text"
-                          bind:value={trackNumber}
-                          maxlength="14"
-                          placeholder="Введите трек-номер"
-                        />
+                        <input id="track-number-maker" type="text" bind:value={trackNumber} maxlength="14" placeholder="Введите трек-номер" />
                         {#if trackNumberError}
                           <p class="error-message">{trackNumberError}</p>
                         {/if}
-                        <button on:click={() => submitTrackNumber('maker')} class="action-button">
-                          Отправить трек-номер
-                        </button>
+                        <button on:click={() => submitTrackNumber('maker')} class="action-button">Отправить трек-номер</button>
                       </div>
                     {:else if currentExchange.maker.track_number}
                       <div class="track-number-info">
@@ -464,23 +491,14 @@
                         <p class="user-name">{currentExchange.taker.user.first_name} {currentExchange.taker.user.last_name}</p>
                         <p class="user-rating">★ {currentExchange.taker.user.rating}</p>
                       </div>
-
                       {#if currentExchange.maker.is_accepted && isTaker && !currentExchange.taker.track_number}
                         <div class="track-number-input">
                           <label for="track-number-taker">Трек-номер посылки (14 символов)</label>
-                          <input
-                            id="track-number-taker"
-                            type="text"
-                            bind:value={trackNumber}
-                            maxlength="14"
-                            placeholder="Введите трек-номер"
-                          />
+                          <input id="track-number-taker" type="text" bind:value={trackNumber} maxlength="14" placeholder="Введите трек-номер" />
                           {#if trackNumberError}
                             <p class="error-message">{trackNumberError}</p>
                           {/if}
-                          <button on:click={() => submitTrackNumber('taker')} class="action-button">
-                            Отправить трек-номер
-                          </button>
+                          <button on:click={() => submitTrackNumber('taker')} class="action-button">Отправить трек-номер</button>
                         </div>
                       {:else if currentExchange.taker.track_number}
                         <div class="track-number-info">
@@ -497,31 +515,21 @@
                     </div>
                   {/if}
                 </div>
-
                 {#if !currentExchange.maker.is_accepted}
                   <div class="exchange-actions">
                     {#if isMaker}
-                      <button on:click={acceptExchange} class="action-button">
-                        Подтвердить обмен
-                      </button>
+                      <button on:click={acceptExchange} class="action-button">Подтвердить обмен</button>
                     {/if}
-                    <button on:click={cancelExchange} class="action-button cancel">
-                      Отменить обмен
-                    </button>
+                    <button on:click={cancelExchange} class="action-button cancel">Отменить обмен</button>
                   </div>
                 {/if}
-
                 {#if currentExchange.taker?.track_number && currentExchange.maker?.track_number}
                   <div class="confirmation-buttons">
                     {#if isMaker && !currentExchange.maker.is_received}
-                      <button on:click={() => confirmReceived('maker')} class="action-button received">
-                        Подтвердить получение
-                      </button>
+                      <button on:click={() => confirmReceived('maker')} class="action-button received">Подтвердить получение</button>
                     {/if}
                     {#if isTaker && !currentExchange.taker.is_received}
-                      <button on:click={() => confirmReceived('taker')} class="action-button received">
-                        Подтвердить получение
-                      </button>
+                      <button on:click={() => confirmReceived('taker')} class="action-button received">Подтвердить получение</button>
                     {/if}
                   </div>
                 {/if}
@@ -529,9 +537,7 @@
             {:else}
               <p>Нет активных обменов</p>
               {#if isMaker || isTaker}
-                <button on:click={cancelExchange} class="action-button cancel">
-                  Отменить поиск
-                </button>
+                <button on:click={cancelExchange} class="action-button cancel">Отменить поиск</button>
               {/if}
             {/if}
           </div>
@@ -540,6 +546,7 @@
     </section>
   </div>
 </main>
+
 
 <style>
   .container {

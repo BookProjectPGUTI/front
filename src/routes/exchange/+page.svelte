@@ -980,8 +980,8 @@
         margin-top: 5px;
         border: 1px solid gray;
         border-radius: 5px;
-        background: #f9f9f9;
-        color: #333;
+        background: #f9f9f9;    
+        color: #000000;
         transition: border-color 0.3s ease;
     }
     input:focus {

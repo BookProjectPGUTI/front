@@ -622,7 +622,7 @@
     background:  #00aaff;
     border-radius: 8px;
     text-decoration: none;
-    color:  #ffffff;
+    color:  #fff;
     cursor: pointer;
     text-align: left;
     border: none;

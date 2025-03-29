@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store';
-import { fetchWithRefresh } from './auth';
 
 type User = {
     id: string;

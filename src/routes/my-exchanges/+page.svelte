@@ -16,9 +16,10 @@
   let isFirstLoad = true;
   let unsubscribe: () => void;
 
-  // Track number input
   let trackNumber = '';
   let trackNumberError = '';
+  let shakingMakerId: string | null = null;
+
 
   async function loadInitialData() {
     await checkUserStatus();
@@ -80,30 +81,43 @@
   }
 
   async function fetchExchangeMakers() {
-    if (isMaker) return;
+  if (isMaker) return;
 
-    isLoading = true;
-    try {
-      const response = await fetch(`${API_BASE_URL}/exchanges/makers`, {
-        credentials: "include",
-        headers: {'Accept': 'application/json'}
+  isLoading = true;
+  try {
+    const response = await fetch(`${API_BASE_URL}/exchanges/makers`, {
+      credentials: "include",
+      headers: {'Accept': 'application/json'}
+    });
+    if (response.ok) {
+      const data = await response.json();
+      exchangeMakers = data.makers || [];
+      
+      exchangeMakers.sort((a, b) => {
+        const aTakerMatches = a.taker_genre_matches?.length || 0;
+        const bTakerMatches = b.taker_genre_matches?.length || 0;
+        
+        const aMakerMatches = a.maker_genre_matches?.length || 0;
+        const bMakerMatches = b.maker_genre_matches?.length || 0;
+        
+        const aTotalMatches = aTakerMatches + aMakerMatches;
+        const bTotalMatches = bTakerMatches + bMakerMatches;
+        
+        if (bTotalMatches !== aTotalMatches) {
+          return bTotalMatches - aTotalMatches;
+        }
+        
+        return b.user.rating - a.user.rating;
       });
-      if (response.ok) {
-        const data = await response.json();
-        exchangeMakers = data.makers || [];
-        exchangeMakers.sort((a, b) =>
-          Math.max(b.taker_genre_matches?.length || 0, b.maker_genre_matches?.length || 0) -
-          Math.max(a.taker_genre_matches?.length || 0, a.maker_genre_matches?.length || 0)
-        );
-      } else {
-        console.error('Ошибка при загрузке предложений на обмен');
-      }
-    } catch (error) {
-      console.error('Ошибка сети:', error);
-    } finally {
-      isLoading = false;
+    } else {
+      console.error('Ошибка при загрузке предложений на обмен');
     }
+  } catch (error) {
+    console.error('Ошибка сети:', error);
+  } finally {
+    isLoading = false;
   }
+}
 
   async function becomeMaker() {
     if (isMaker) return;
@@ -166,6 +180,8 @@
   async function becomeTaker(makerId: string) {
     if (isTaker) return;
 
+    shakingMakerId = makerId;
+    
     isLoading = true;
     try {
       const response = await fetch(`${API_BASE_URL}/exchanges/takers`, {
@@ -180,23 +196,13 @@
         selectedMakerId = makerId;
         await checkUserStatus();
         activeTab = 'active';
-
-        const selectedMaker = exchangeMakers.find(m => m.id === makerId);
-        if (selectedMaker) {
-          selectedMaker.notification = {
-            message: 'Вас выбрали на обмен!',
-            show: true
-          };
-          exchangeMakers = exchangeMakers;
-        }
       } else {
         console.error('Ошибка при попытке стать тейкером');
-        const errorData = await response.json();
-        console.error('Детали ошибки:', errorData);
       }
     } catch (error) {
       console.error('Ошибка сети:', error);
     } finally {
+      shakingMakerId = null;
       isLoading = false;
     }
   }
@@ -260,6 +266,34 @@
     } catch (error) {
       console.error('Ошибка сети:', error);
       trackNumberError = 'Ошибка сети при отправке трек-номера';
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  async function confirmReceived(role: 'maker' | 'taker') {
+    isLoading = true;
+    try {
+      const response = await fetch(`${API_BASE_URL}/exchanges/received`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          user_role: role
+        })
+      });
+
+      if (response.ok) {
+        await checkUserStatus();
+      } else {
+        const errorData = await response.json();
+        console.error('Ошибка при подтверждении получения:', errorData);
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
     } finally {
       isLoading = false;
     }
@@ -348,31 +382,45 @@
                   <!-- svelte-ignore a11y_click_events_have_key_events -->
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
                   {#if maker.id !== currentUser?.id}
-                    <div class="exchange-item compact {selectedMakerId === maker.id ? 'selected' : ''}"
-                         on:click={() => selectMaker(maker.id)}>
-                      <div class="exchange-summary">
-                        <div class="user-info-compact">
-                          <span class="user-name">{maker.user.first_name} {maker.user.last_name}</span>
-                          <span class="user-rating">★ {maker.user.rating}</span>
-                        </div>
-                        <div class="book-info-compact">
-                          <span class="book-title">{maker.book.name}</span>
-                          <span class="book-author">{maker.book.author.first_name} {maker.book.author.last_name}</span>
-                        </div>
-                        <div class="genre-matches">
-                          <span class="matches-count">
-                            Совпадений: {Math.max(maker.taker_genre_matches?.length || 0, maker.maker_genre_matches?.length || 0)}
-                          </span>
-                        </div>
-                      </div>
-                      <!-- svelte-ignore a11y_consider_explicit_label -->
-                      <button
-                        on:click|preventDefault={() => becomeTaker(maker.id)}
-                        class="accept-button"
-                        title="Выбрать для обмена">
-                        <i class="fas fa-handshake"></i>
-                      </button>
+                  <div class="exchange-item compact {selectedMakerId === maker.id ? 'selected' : ''}"
+                  on:click={() => selectMaker(maker.id)}>
+                    <div class="user-info-compact">
+                      <span class="user-name">{maker.user.first_name} {maker.user.last_name}</span>
+                      <span class="user-rating">★ {maker.user.rating}</span>
                     </div>
+                  
+                    <div class="book-info-line">
+                      <span class="book-title">{maker.book.name}</span>
+                      <span class="book-author">{maker.book.author.first_name} {maker.book.author.last_name}</span>
+                      
+                      <div class="book-meta">
+                        {#if maker.book.publication_year}
+                          <span class="meta-item"><i class="fas fa-calendar-alt"></i> {maker.book.publication_year}</span>
+                        {/if}
+                        {#if maker.book.isbn}
+                          <span class="meta-item"><i class="fas fa-barcode"></i> {maker.book.isbn}</span>
+                        {/if}
+                      </div>
+                      
+                      <div class="genres-container">
+                        {#each maker.book.genres as genre}
+                          {#if maker.taker_genre_matches.some((takerGenre: { id: any; }) => takerGenre.id === genre.id)}
+                            <span class="genre matched">{genre.name}</span>
+                          {:else}
+                            <span class="genre">{genre.name}</span>
+                          {/if}
+                        {/each}
+                      </div>
+                    </div>
+                  
+                    <!-- svelte-ignore a11y_consider_explicit_label -->
+                    <button
+                      on:click|preventDefault={() => becomeTaker(maker.id)}
+                      class="accept-button {shakingMakerId === maker.id ? 'shaking' : ''}"
+                      title="Выбрать для обмена">
+                      <i class="fas fa-handshake"></i>
+                    </button>
+                  </div>
                   {/if}
                 {:else}
                   <p>Нет доступных предложений для обмена.</p>
@@ -384,25 +432,98 @@
           <div class="active-exchanges">
             <h2>Активные обмены</h2>
             {#if currentExchange}
-              <div class="exchange-details">
-                <div class="exchange-books">
-                  <!-- Maker's book -->
-                  <div class="book-card {isMaker ? 'my-book' : 'their-book'} {currentExchange.maker.is_accepted ? 'accepted' : ''}">
-                    <h3>{isMaker ? 'Ваша книга' : 'Книга для обмена'}</h3>
-                    <div class="book-info">
-                      <p class="book-title">{currentExchange.maker.book.name}</p>
-                      <p class="book-author">{currentExchange.maker.book.author.first_name} {currentExchange.maker.book.author.last_name}</p>
+            <div class="exchange-details">
+              <div class="exchange-books">
+                <!-- Maker's book -->
+                <div class="book-card {isMaker ? 'my-book' : 'their-book'} {currentExchange.maker.is_accepted ? 'accepted' : ''}">
+                  <h3>{isMaker ? 'Ваша книга' : 'Книга для обмена'}</h3>
+                  <div class="book-info">
+                    <p class="book-title">{currentExchange.maker.book.name}</p>
+                    <p class="book-author">{currentExchange.maker.book.author.first_name} {currentExchange.maker.book.author.last_name}</p>
+                    
+                    <!-- Добавленная информация о книге -->
+                    <div class="book-meta">
+                      {#if currentExchange.maker.book.publication_year}
+                        <span class="meta-item"><i class="fas fa-calendar-alt"></i> {currentExchange.maker.book.publication_year}</span>
+                      {/if}
+                      {#if currentExchange.maker.book.isbn}
+                        <span class="meta-item"><i class="fas fa-barcode"></i> ISBN: {currentExchange.maker.book.isbn}</span>
+                      {/if}
                     </div>
+
+                    <!-- Добавленные жанры -->
+                    <div class="genres-container">
+                      {#each currentExchange.maker.book.genres as genre}
+                        <span class="genre">{genre.name}</span>
+                      {/each}
+                    </div>
+                  </div>
+                  
                     <div class="user-info">
                       <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
                       <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
                     </div>
-
-                    {#if currentExchange.maker.is_accepted && isMaker && !currentExchange.maker.track_number}
+            
+                  {#if currentExchange.maker.is_accepted && isMaker && !currentExchange.maker.track_number}
+                    <div class="track-number-input">
+                      <label for="track-number-maker">Трек-номер посылки (14 символов)</label>
+                      <input
+                        id="track-number-maker"
+                        type="text"
+                        bind:value={trackNumber}
+                        maxlength="14"
+                        placeholder="Введите трек-номер"
+                      />
+                      {#if trackNumberError}
+                        <p class="error-message">{trackNumberError}</p>
+                      {/if}
+                      <button on:click={() => submitTrackNumber('maker')} class="action-button">
+                        Отправить трек-номер
+                      </button>
+                    </div>
+                  {:else if currentExchange.maker.track_number}
+                    <div class="track-number-info">
+                      <p>Трек-номер отправлен: {currentExchange.maker.track_number}</p>
+                      {#if currentExchange.maker.is_received}
+                        <p class="received-info">✅ Получено</p>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+            
+                {#if currentExchange.taker}
+                <div class="book-card {isTaker ? 'my-book' : 'their-book'} {currentExchange.maker.is_accepted ? 'accepted' : ''}">
+                  <h3>{isTaker ? 'Ваша книга' : 'Книга партнера'}</h3>
+                  <div class="book-info">
+                    <p class="book-title">{currentExchange.taker.book.name}</p>
+                    <p class="book-author">{currentExchange.taker.book.author.first_name} {currentExchange.taker.book.author.last_name}</p>
+                      
+                    <div class="book-meta">
+                      {#if currentExchange.taker.book.publication_year}
+                        <span class="meta-item"><i class="fas fa-calendar-alt"></i> {currentExchange.taker.book.publication_year}</span>
+                      {/if}
+                      {#if currentExchange.taker.book.isbn}
+                        <span class="meta-item"><i class="fas fa-barcode"></i> ISBN: {currentExchange.taker.book.isbn}</span>
+                      {/if}
+                    </div>
+                      
+                    <div class="genres-container">
+                      {#each currentExchange.taker.book.genres as genre}
+                        <span class="genre">{genre.name}</span>
+                      {/each}
+                    </div>
+                  </div>
+                    
+                  <div class="user-info">
+                    <p class="user-name">{currentExchange.taker.user.first_name} {currentExchange.taker.user.last_name}</p>
+                    <p class="user-rating">★ {currentExchange.taker.user.rating}</p>
+                  </div>
+            
+                    {#if currentExchange.maker.is_accepted && isTaker && !currentExchange.taker.track_number}
                       <div class="track-number-input">
-                        <label for="track-number-maker">Трек-номер посылки (14 символов)</label>
+                        <label for="track-number-taker">Трек-номер посылки (14 символов)</label>
                         <input
-                          id="track-number-maker"
+                          id="track-number-taker"
                           type="text"
                           bind:value={trackNumber}
                           maxlength="14"
@@ -411,73 +532,54 @@
                         {#if trackNumberError}
                           <p class="error-message">{trackNumberError}</p>
                         {/if}
-                        <button on:click={() => submitTrackNumber('maker')} class="action-button">
+                        <button on:click={() => submitTrackNumber('taker')} class="action-button">
                           Отправить трек-номер
                         </button>
                       </div>
-                    {:else if currentExchange.maker.track_number}
+                    {:else if currentExchange.taker.track_number}
                       <div class="track-number-info">
-                        <p>Трек-номер отправлен: {currentExchange.maker.track_number}</p>
+                        <p>Трек-номер отправлен: {currentExchange.taker.track_number}</p>
+                        {#if currentExchange.taker.is_received}
+                          <p class="received-info">✅ Получено</p>
+                        {/if}
                       </div>
                     {/if}
                   </div>
-
-                  <!-- Taker's book -->
-                  {#if currentExchange.taker}
-                    <div class="book-card {isTaker ? 'my-book' : 'their-book'} {currentExchange.maker.is_accepted ? 'accepted' : ''}">
-                      <h3>{isTaker ? 'Ваша книга' : 'Книга партнера'}</h3>
-                      <div class="book-info">
-                        <p class="book-title">{currentExchange.taker.book.name}</p>
-                        <p class="book-author">{currentExchange.taker.book.author.first_name} {currentExchange.taker.book.author.last_name}</p>
-                      </div>
-                      <div class="user-info">
-                        <p class="user-name">{currentExchange.taker.user.first_name} {currentExchange.taker.user.last_name}</p>
-                        <p class="user-rating">★ {currentExchange.taker.user.rating}</p>
-                      </div>
-
-                      {#if currentExchange.maker.is_accepted && isTaker && !currentExchange.taker.track_number}
-                        <div class="track-number-input">
-                          <label for="track-number-taker">Трек-номер посылки (14 символов)</label>
-                          <input
-                            id="track-number-taker"
-                            type="text"
-                            bind:value={trackNumber}
-                            maxlength="14"
-                            placeholder="Введите трек-номер"
-                          />
-                          {#if trackNumberError}
-                            <p class="error-message">{trackNumberError}</p>
-                          {/if}
-                          <button on:click={() => submitTrackNumber('taker')} class="action-button">
-                            Отправить трек-номер
-                          </button>
-                        </div>
-                      {:else if currentExchange.taker.track_number}
-                        <div class="track-number-info">
-                          <p>Трек-номер отправлен: {currentExchange.taker.track_number}</p>
-                        </div>
-                      {/if}
-                    </div>
-                  {:else}
-                    <div class="waiting-partner">
-                      <p>Ожидание выбора книги партнером...</p>
-                    </div>
-                  {/if}
-                </div>
-
-                {#if !currentExchange.maker.is_accepted}
-                  <div class="exchange-actions">
-                    {#if isMaker}
-                      <button on:click={acceptExchange} class="action-button">
-                        Подтвердить обмен
-                      </button>
-                    {/if}
-                    <button on:click={cancelExchange} class="action-button cancel">
-                      Отменить обмен
-                    </button>
+                {:else}
+                  <div class="waiting-partner">
+                    <p>Ожидание выбора книги партнером...</p>
                   </div>
                 {/if}
               </div>
+            
+              {#if !currentExchange.maker.is_accepted}
+                <div class="exchange-actions">
+                  {#if isMaker}
+                    <button on:click={acceptExchange} class="action-button">
+                      Подтвердить обмен
+                    </button>
+                  {/if}
+                  <button on:click={cancelExchange} class="action-button cancel">
+                    Отменить обмен
+                  </button>
+                </div>
+              {/if}
+            
+              {#if currentExchange.taker?.track_number && currentExchange.maker?.track_number}
+                <div class="confirmation-buttons">
+                  {#if isMaker && !currentExchange.maker.is_received}
+                    <button on:click={() => confirmReceived('maker')} class="action-button received">
+                      Подтвердить получение
+                    </button>
+                  {/if}
+                  {#if isTaker && !currentExchange.taker.is_received}
+                    <button on:click={() => confirmReceived('taker')} class="action-button received">
+                      Подтвердить получение
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
             {:else}
               <p>Нет активных обменов</p>
               {#if isMaker || isTaker}
@@ -509,16 +611,17 @@
 
   .menu-item {
     padding: 10px 15px;
-    background: rgb(42, 45, 47);
+    background:  #fff;
     border-radius: 8px;
     text-decoration: none;
-    color: rgba(173, 166, 156, 1);
+    color: #000000;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
   }
-
   .menu-item:hover {
-    background: rgb(50, 53, 55);
+      background: #ccc;
+      border-color: #ccc;
   }
-
   .layout {
     display: flex;
     width: 100%;
@@ -531,7 +634,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: rgb(42, 45, 47);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 10px;
   }
@@ -539,40 +642,40 @@
   .user-info {
     margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(173, 166, 156, 0.2);
+    border-bottom: 1px solid #000000;
   }
 
   .username, .name {
     font-size: 16px;
     margin: 0;
-    color: rgba(173, 166, 156, 1);
+    color: #000000;
   }
 
   .rating {
     font-size: 14px;
     margin: 5px 0 0;
-    color: rgba(173, 166, 156, 0.8);
+    color: #000000;
   }
 
   .sidebar-item {
     padding: 10px 15px;
-    background: rgb(50, 53, 55);
+    background:  #00aaff;
     border-radius: 8px;
     text-decoration: none;
-    color: rgba(173, 166, 156, 1);
+    color:  #ffffff;
     cursor: pointer;
     text-align: left;
     border: none;
   }
 
   .sidebar-item.active {
-    background: rgb(60, 63, 65);
+    background: #4da6ff;
   }
 
   .content {
     flex: 1;
-    background: rgb(42, 45, 47);
-    color: rgba(173, 166, 156, 1);
+    background:#f9f9f9  ;
+    color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 10px;
   }
@@ -592,7 +695,7 @@
   }
 
   .exchange-item {
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
     display: grid;
@@ -600,91 +703,132 @@
   }
 
   .exchange-item.compact {
-    padding: 12px 15px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-  }
-
-  .exchange-summary {
-    display: flex;
-    gap: 20px;
-    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    width: 100%;
   }
 
   .user-info-compact {
     display: flex;
     flex-direction: column;
-    min-width: 150px;
+    min-width: 120px;
+    flex-shrink: 0;
   }
 
+
   .user-name {
-    font-weight: bold;
+    font-weight: 500;
+    font-size: 0.9em;
+    white-space: nowrap;
   }
 
   .user-rating {
-    font-size: 0.9em;
-    color: rgba(173, 166, 156, 0.8);
+    font-size: 0.8em;
+    color: #666;
   }
 
-  .book-info-compact {
+  .book-info-line {
     display: flex;
-    flex-direction: column;
     flex-grow: 1;
-    min-width: 200px;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   .book-title {
     font-weight: bold;
+    font-size: 0.9em;
+    min-width: 120px;
   }
 
   .book-author {
-    font-size: 0.9em;
-    color: rgba(173, 166, 156, 0.8);
-  }
-
-  .genre-matches {
+    font-size: 0.85em;
+    color: #555;
     min-width: 120px;
-    text-align: right;
   }
 
-  .matches-count {
-    font-size: 0.9em;
-    color: rgba(173, 166, 156, 0.8);
+  .book-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .genres-container {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .genre {
+    font-size: 0.7em;
+    padding: 2px 6px;
+    background: #e0e0e0;
+    border-radius: 8px;
+    color: #333;
+    white-space: nowrap;
+  }
+
+  .genre.matched {
+    background: #4CAF50;
+    color: white;
   }
 
   .accept-button {
     background: rgb(60, 100, 60);
     border: none;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     color: white;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .accept-button:hover {
     background: rgb(70, 110, 70);
+    transform: scale(1.1);
+  }
+
+  .accept-button.shaking {
+    animation: shake 0.5s infinite;
+  }
+
+  @keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(10deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-10deg); }
+    100% { transform: rotate(0deg); }
   }
 
   .action-button {
     padding: 10px 15px;
-    background: rgb(60, 63, 65);
+    background:  #00aaff;
     border: none;
     border-radius: 8px;
-    color: rgba(173, 166, 156, 1);
+    color: #ffffff;
     cursor: pointer;
     margin-top: 10px;
     width: fit-content;
   }
 
   .action-button:hover {
-    background: rgb(70, 73, 75);
+    background: #4da6ff;
   }
 
   .action-button.cancel {
@@ -695,8 +839,16 @@
     background: rgb(110, 70, 70);
   }
 
+  .action-button.received {
+    background: rgb(60, 100, 100);
+  }
+
+  .action-button.received:hover {
+    background: rgb(70, 110, 110);
+  }
+
   .status-message {
-    color: rgba(173, 166, 156, 1);
+    color: rgb(0, 0, 0);
     font-style: italic;
     margin-bottom: 15px;
   }
@@ -714,7 +866,7 @@
   }
 
   .book-card {
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
     position: relative;
@@ -744,13 +896,13 @@
   }
 
   .book-author {
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .user-info {
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid rgba(173, 166, 156, 0.2);
+    border-top: 1px solid #f9f9f9;
   }
 
   .user-name {
@@ -758,20 +910,26 @@
   }
 
   .user-rating {
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .waiting-partner {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(50, 53, 55);
+    background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
-    color: rgba(173, 166, 156, 0.8);
+    color: rgba(0, 0, 0, 0.8);
   }
 
   .exchange-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .confirmation-buttons {
     display: flex;
     gap: 10px;
     margin-top: 20px;
@@ -832,5 +990,11 @@
     border-top: 1px solid rgba(173, 166, 156, 0.2);
     font-size: 0.9em;
     color: rgba(173, 166, 156, 0.8);
+  }
+
+  .received-info {
+    color: #6bff6b;
+    font-size: 0.9em;
+    margin-top: 5px;
   }
 </style>

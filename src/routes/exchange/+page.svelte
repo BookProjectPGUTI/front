@@ -830,7 +830,7 @@
     }
     .error-message {
         color: red;
-        font-size: 0.875rem;
+        font-size: 0.690rem;
         margin-top: 0.25rem;
     }   
     .modal-overlay {
@@ -893,6 +893,7 @@
         padding: 20px;
         color:#333;
         background: #f9f9f9;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu {
         display: flex;
@@ -907,6 +908,7 @@
         color: #333;
         border: 2px solid transparent;
         transition: border-color 0.3s ease, background-color 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .menu-item:hover {
         background: #ccc;
@@ -919,7 +921,8 @@
         max-width: 800px;
         width: 100%;
         position: relative;
-        height: 680px;
+        height: 700px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .form-title {
         text-align: center;
@@ -977,8 +980,8 @@
         margin-top: 5px;
         border: 1px solid gray;
         border-radius: 5px;
-        background: #f9f9f9;
-        color: #333;
+        background: #f9f9f9;    
+        color: #000000;
         transition: border-color 0.3s ease;
     }
     input:focus {
@@ -1097,9 +1100,4 @@
         width: 100%; 
     }
 
-    .error-message {
-        color: red;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
 </style>

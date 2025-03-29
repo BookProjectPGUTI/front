@@ -22,6 +22,7 @@
 	  padding: 20px;
 	  background: #f9f9f9;
 	  color: #333;
+	  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	}
   
 	.menu {

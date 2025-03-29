@@ -601,27 +601,32 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
+    background:  #f9f9f9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    
   }
 
   .menu {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .menu-item {
-    padding: 10px 15px;
-    background:  #fff;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #000000;
-    border: 2px solid transparent;
-    transition: border-color 0.3s ease, background-color 0.3s ease;
-  }
-  .menu-item:hover {
-      background: #ccc;
-      border-color: #ccc;
-  }
+        padding: 10px 15px;
+        background:  #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #000000;
+        border: 2px solid transparent;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .menu-item:hover {
+        background: #ccc;
+        border-color: #ccc;
+    }
   .layout {
     display: flex;
     width: 100%;
@@ -634,9 +639,11 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: #f9f9f9;
+    background: #fff;
     padding: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    
   }
 
   .user-info {
@@ -662,7 +669,7 @@
     background:  #00aaff;
     border-radius: 8px;
     text-decoration: none;
-    color:  #ffffff;
+    color:  #fff;
     cursor: pointer;
     text-align: left;
     border: none;
@@ -674,10 +681,11 @@
 
   .content {
     flex: 1;
-    background:#f9f9f9  ;
+    background:#fff  ;
     color: rgb(0, 0, 0);
     padding: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .exchange-offers, .active-exchanges {
@@ -787,16 +795,15 @@
     background: rgb(60, 100, 60);
     border: none;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     color: white;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    margin-left: auto;
+    margin-left: 10px;
   }
 
   .accept-button:hover {

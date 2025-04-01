@@ -925,7 +925,7 @@
         max-width: 800px;
         width: 100%;
         position: relative;
-        height: 680px;
+        height: 700px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .form-title {

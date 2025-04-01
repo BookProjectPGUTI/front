@@ -188,22 +188,6 @@
     margin-bottom: 0.5rem;
   }
 
-  .popup {
-    background: rgb(255, 255, 255);
-    color: rgba(255, 91, 91, 1);
-    padding: 12px 20px;
-    border-radius: 6px;
-    
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .popup.show {
-    display: block;
-  }
-
   .form-group {
     margin-bottom: 1rem;
   }
@@ -244,19 +228,5 @@
 
   .button:active {
     transform: scale(0.98);
-  }
-
-  .forgot-password {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-
-  .forgot-password a {
-    color:  #00aaff;
-    text-decoration: none;
-  }
-
-  .forgot-password a:hover {
-    text-decoration: underline;
   }
 </style>

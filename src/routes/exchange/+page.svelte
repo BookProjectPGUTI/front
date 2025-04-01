@@ -140,110 +140,114 @@
     }
 
     function validateAddressForm(): boolean {
-        let isValid = true;
+    let isValid = true;
 
-        cityError = null;
-        streetError = null;
-        buildingError = null;
-        houseError = null;
-        apartmentError = null;
-        postalCodeError = null;
-        lastNameError = null;
-        firstNameError = null;
-        middleNameError = null;
+    cityError = null;
+    streetError = null;
+    buildingError = null;
+    houseError = null;
+    apartmentError = null;
+    postalCodeError = null;
+    lastNameError = null;
+    firstNameError = null;
+    middleNameError = null;
 
-        if (!city.trim()) {
-            cityError = "Город не может быть пустым.";
-            isValid = false;
-        } else if (city.length > 128) {
-            cityError = "Город не может быть длиннее 128 символов.";
-            isValid = false;
-        } else if (!/^[а-яА-Я\s-]+$/.test(city)) {
-            cityError = "Город должен содержать только кириллицу, пробелы и тире.";
-            isValid = false;
-        }
+    if (!city.trim()) {
+        cityError = "Город не может быть пустым.";
+        isValid = false;
+    } else if (city.length > 128) {
+        cityError = "Город не может быть длиннее 128 символов.";
+        isValid = false;
+    } else if (!/^[а-яА-ЯёЁ\s-]+$/.test(city)) {
+        cityError = "Город должен содержать только кириллицу, пробелы и тире.";
+        isValid = false;
+    }
 
-        if (!street.trim()) {
-            streetError = "Улица не может быть пустой.";
-            isValid = false;
-        } else if (street.length > 128) {
-            streetError = "Улица не может быть длиннее 128 символов.";
-            isValid = false;
-        } else if (!/^[а-яА-Я0-9\s-]+$/.test(street)) {
-            streetError = "Улица должна содержать только кириллицу, цифры, пробелы и тире.";
-            isValid = false;
-        }
+    if (!street.trim()) {
+        streetError = "Улица не может быть пустой.";
+        isValid = false;
+    } else if (street.length > 128) {
+        streetError = "Улица не может быть длиннее 128 символов.";
+        isValid = false;
+    } else if (!/^[а-яА-ЯёЁ\s-]+$/.test(street)) {
+        streetError = "Улица должна содержать только кириллицу, пробелы и тире.";
+        isValid = false;
+    }
 
-        if (building.trim() && !/^[а-яА-Я0-9]+$/.test(building)) {
-            buildingError = "Строение должно содержать только кириллицу или цифры.";
-            isValid = false;
-        } else if (building.length > 128) {
+    if (building.trim()) {
+        if (building.length > 128) {
             buildingError = "Строение не может быть длиннее 128 символов.";
             isValid = false;
-        }
-
-        if (!house.trim()) {
-            houseError = "Дом не может быть пустым.";
-            isValid = false;
-        } else if (!/^[а-яА-Я0-9]+$/.test(house)) {
-            houseError = "Дом должен содержать только кириллицу или цифры.";
-            isValid = false;
-        } else if (house.length > 128) {
-            houseError = "Дом не может быть длиннее 128 символов.";
+        } else if (!/^[а-яА-ЯёЁ0-9]{1,2}$/.test(building)) {
+            buildingError = "Строение должно содержать только кириллицу или цифры (до 2 символов).";
             isValid = false;
         }
+    }
 
-        if (!apartment.trim()) {
-            apartmentError = "Квартира не может быть пустой.";
-            isValid = false;
-        } else if (!/^\d+$/.test(apartment)) {
-            apartmentError = "Квартира должна содержать только цифры.";
-            isValid = false;
-        } else if (apartment.length > 128) {
-            apartmentError = "Квартира не может быть длиннее 128 символов.";
-            isValid = false;
-        }
+    if (!house.trim()) {
+        houseError = "Дом не может быть пустым.";
+        isValid = false;
+    } else if (house.length > 128) {
+        houseError = "Дом не может быть длиннее 128 символов.";
+        isValid = false;
+    } else if (!/^[0-9]+[а-яА-ЯёЁ]?$/.test(house)) {
+        houseError = "Дом должен содержать цифры и возможно 1 букву кириллицы (например: 146А).";
+        isValid = false;
+    }
 
-        if (!postalCode.trim()) {
-            postalCodeError = "Индекс не может быть пустым.";
-            isValid = false;
-        } else if (!/^\d{6}$/.test(postalCode)) {
-            postalCodeError = "Индекс должен состоять из 6 цифр.";
-            isValid = false;
-        }
+    if (!apartment.trim()) {
+        apartmentError = "Квартира не может быть пустой.";
+        isValid = false;
+    } else if (apartment.length > 128) {
+        apartmentError = "Квартира не может быть длиннее 128 символов.";
+        isValid = false;
+    } else if (!/^\d{1,3}$/.test(apartment)) {
+        apartmentError = "Квартира должна содержать только цифры (не более 3 символов).";
+        isValid = false;
+    }
 
-        if (!lastName.trim()) {
-            lastNameError = "Фамилия не может быть пустой.";
-            isValid = false;
-        } else if (lastName.length > 50) {
-            lastNameError = "Фамилия не может быть длиннее 50 символов.";
-            isValid = false;
-        } else if (!/^[а-яА-Я]+$/.test(lastName)) {
-            lastNameError = "Фамилия должна содержать только кириллицу.";
-            isValid = false;
-        }
+    if (!postalCode.trim()) {
+        postalCodeError = "Индекс не может быть пустым.";
+        isValid = false;
+    } else if (!/^\d{6}$/.test(postalCode)) {
+        postalCodeError = "Индекс должен состоять из 6 цифр.";
+        isValid = false;
+    }
 
-        if (!firstName.trim()) {
-            firstNameError = "Имя не может быть пустым.";
-            isValid = false;
-        } else if (firstName.length > 50) {
-            firstNameError = "Имя не может быть длиннее 50 символов.";
-            isValid = false;
-        } else if (!/^[а-яА-Я]+$/.test(firstName)) {
-            firstNameError = "Имя должно содержать только кириллицу.";
-            isValid = false;
-        }
+    if (!lastName.trim()) {
+        lastNameError = "Фамилия не может быть пустой.";
+        isValid = false;
+    } else if (lastName.length > 25) {
+        lastNameError = "Фамилия не может быть длиннее 25 символов.";
+        isValid = false;
+    } else if (!/^[а-яА-ЯёЁ]+$/.test(lastName)) {
+        lastNameError = "Фамилия должна содержать только кириллицу.";
+        isValid = false;
+    }
 
-        if (middleName.trim() && !/^[а-яА-Я]*$/.test(middleName)) {
+    if (!firstName.trim()) {
+        firstNameError = "Имя не может быть пустым.";
+        isValid = false;
+    } else if (firstName.length > 20) {
+        firstNameError = "Имя не может быть длиннее 20 символов.";
+        isValid = false;
+    } else if (!/^[а-яА-ЯёЁ]+$/.test(firstName)) {
+        firstNameError = "Имя должно содержать только кириллицу.";
+        isValid = false;
+    }
+
+    if (middleName.trim()) {
+        if (middleName.length > 25) {
+            middleNameError = "Отчество не может быть длиннее 25 символов.";
+            isValid = false;
+        } else if (!/^[а-яА-ЯёЁ]*$/.test(middleName)) {
             middleNameError = "Отчество должно содержать только кириллицу.";
             isValid = false;
-        } else if (middleName.length > 50) {
-            middleNameError = "Отчество не может быть длиннее 50 символов.";
-            isValid = false;
         }
-
-        return isValid;
     }
+
+    return isValid;
+}
     function showTab(tab: string) {
         activeTab = tab;
         if (tab === "exchange") {
@@ -921,7 +925,7 @@
         max-width: 800px;
         width: 100%;
         position: relative;
-        height: 680px;
+        height: 700px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     .form-title {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { userStore, API_BASE_URL } from '$lib/stores';
+  import { userStore, API_BASE_URL, isLoginOpen } from '$lib/stores';
   import { onMount } from 'svelte';
   import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -20,6 +20,8 @@
   let trackNumberError = '';
   let shakingMakerId: string | null = null;
 
+  let errorMessage = '';
+  let errorDetails = '';
 
   async function loadInitialData() {
     await checkUserStatus();
@@ -81,43 +83,76 @@
   }
 
   async function fetchExchangeMakers() {
-  if (isMaker) return;
+    if (isMaker) return;
 
-  isLoading = true;
-  try {
-    const response = await fetch(`${API_BASE_URL}/exchanges/makers`, {
-      credentials: "include",
-      headers: {'Accept': 'application/json'}
-    });
-    if (response.ok) {
-      const data = await response.json();
-      exchangeMakers = data.makers || [];
-      
-      exchangeMakers.sort((a, b) => {
-        const aTakerMatches = a.taker_genre_matches?.length || 0;
-        const bTakerMatches = b.taker_genre_matches?.length || 0;
-        
-        const aMakerMatches = a.maker_genre_matches?.length || 0;
-        const bMakerMatches = b.maker_genre_matches?.length || 0;
-        
-        const aTotalMatches = aTakerMatches + aMakerMatches;
-        const bTotalMatches = bTakerMatches + bMakerMatches;
-        
-        if (bTotalMatches !== aTotalMatches) {
-          return bTotalMatches - aTotalMatches;
-        }
-        
-        return b.user.rating - a.user.rating;
+    isLoading = true;
+    errorMessage = '';
+    errorDetails = '';
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/exchanges/makers`, {
+        credentials: "include",
+        headers: {'Accept': 'application/json'}
       });
-    } else {
-      console.error('Ошибка при загрузке предложений на обмен');
+      
+      if (response.ok) {
+        const data = await response.json();
+        exchangeMakers = data.makers || [];
+        
+        exchangeMakers.sort((a, b) => {
+          const aTakerMatches = a.taker_genre_matches?.length || 0;
+          const bTakerMatches = b.taker_genre_matches?.length || 0;
+          
+          const aMakerMatches = a.maker_genre_matches?.length || 0;
+          const bMakerMatches = b.maker_genre_matches?.length || 0;
+          
+          const aTotalMatches = aTakerMatches + aMakerMatches;
+          const bTotalMatches = bTakerMatches + bMakerMatches;
+          
+          if (bTotalMatches !== aTotalMatches) {
+            return bTotalMatches - aTotalMatches;
+          }
+          
+          return b.user.rating - a.user.rating;
+        });
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        
+        switch(response.status) {
+          case 400:
+            errorMessage = 'Пользователь не ввел ФИО';
+            errorDetails = errorData.details || 'Вернитесь на вкладку Начать обмен -> Адрес доставки и введите там ФИО';
+            break;
+          case 401:
+            errorMessage = 'Неверные данные для входа.';
+            errorDetails = errorData.details || 'ХЗ';
+            break;
+          case 403:
+            errorMessage = 'Проблемы с авторизацией';
+            errorDetails = errorData.details || 'Проверьте авторизацию';
+            break;
+          case 404:
+            errorMessage = 'Не найдено';
+            errorDetails = errorData.details || 'Проверьте заполнили ли вы все шаги на вкладке Начать обмен';
+            break;
+          case 500:
+            errorMessage = 'Ошибка сервера';
+            errorDetails = 'Попробуйте позже или обратитесь в поддержку';
+            break;
+          default:
+            errorMessage = 'Ошибка при загрузке';
+            errorDetails = `Код ошибки: ${response.status}`;
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+      errorMessage = 'Ошибка сети';
+      errorDetails = 'Проверьте подключение к интернету';
+    } finally {
+      isLoading = false;
     }
-  } catch (error) {
-    console.error('Ошибка сети:', error);
-  } finally {
-    isLoading = false;
   }
-}
+
 
   async function becomeMaker() {
     if (isMaker) return;
@@ -343,7 +378,20 @@
 
     <section class="content">
       {#if isLoading}
-        <p>Загрузка...</p>
+      <p>Загрузка...</p>
+    {:else if errorMessage}
+      <div class="error-notification">
+        <h3>{errorMessage}</h3>
+        <p>{errorDetails}</p>
+        
+        {#if errorMessage === 'Проблемы с авторизацией'}
+          <button class="action-button" on:click={() => isLoginOpen.set(true)}>Войти</button>
+        {:else}
+          <button on:click={fetchExchangeMakers} class="action-button">
+            Попробовать снова
+          </button>
+        {/if}
+      </div>
       {:else}
         {#if activeTab === 'offers'}
           <div class="exchange-offers">

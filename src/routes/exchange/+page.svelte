@@ -362,50 +362,50 @@
         }
     }
     async function submitForm() {
-    if (!validateForm()) {
-        return;
-    }
-
-    const requestBody = {
-        author: {
-            first_name: firstNameA,
-            last_name: lastNameA
-        },
-        name: bookName,
-        isbn: isbn,
-        publication_year: publicationYear,
-        genres_ids: Array.from(selectedGenres)
-    };
-
-    try {
-        let response;
-        if (isGetSuccessful) {
-            response = await fetch(`${API_BASE_URL}/books`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-                credentials: "include",
-            });
-        } else {
-            response = await fetch(`${API_BASE_URL}/books`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-                credentials: "include",
-            });
+        if (!validateForm()) {
+            return;
         }
-        if (response.status === 204 || response.status === 201) {
-            activeTab = "receive";
+
+        const requestBody = {
+            author: {
+                first_name: firstNameA,
+                last_name: lastNameA
+            },
+            name: bookName,
+            isbn: isbn,
+            publication_year: publicationYear,
+            genres_ids: Array.from(selectedGenres)
+        };
+
+        try {
+            let response;
+            if (isGetSuccessful) {
+                response = await fetch(`${API_BASE_URL}/books`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                    credentials: "include",
+                });
+            } else {
+                response = await fetch(`${API_BASE_URL}/books`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                    credentials: "include",
+                });
+            }
+            if (response.status === 204 || response.status === 201) {
+                activeTab = "receive";
+            }
+        } catch (error) {
+            console.error("Ошибка при отправке данных:", error);
+            alert("Ошибка при отправке данных");
         }
-    } catch (error) {
-        console.error("Ошибка при отправке данных:", error);
-        alert("Ошибка при отправке данных");
     }
-}
 
     async function fetchWishList() {
         try {
@@ -454,7 +454,15 @@
     if (!validateAddressForm()) {
         return; 
     }
-
+    const addressData = {
+            mail_index: postalCode,
+            city: city,
+            street: street,
+            house: house,
+            build: building.trim() ? building : null, // Передаем NULL если building пустой
+            apartment: apartment,
+            is_active: setAsDefault 
+        };
     try {
         const userResponse = await fetch(`${API_BASE_URL}/users`, {
             method: "PUT",
@@ -473,54 +481,37 @@
 
         console.log("ФИО пользователя успешно обновлено.");
 
-        if (selectedAddress) {
-            const addressResponse = await fetch(`${API_BASE_URL}/users/addresses/${selectedAddress.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    mail_index: postalCode,
-                    city: city,
-                    street: street,
-                    house: house,
-                    build: building,
-                    apartment: apartment,
-                    is_active: setAsDefault 
-                }),
-                credentials: "include",
-            });
+             if (selectedAddress) {
+                const addressResponse = await fetch(`${API_BASE_URL}/users/addresses/${selectedAddress.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(addressData),
+                    credentials: "include",
+                });
 
-            if (addressResponse.status !== 204) {
-                throw new Error("Ошибка при обновлении адреса");
+                if (addressResponse.status !== 204) {
+                    throw new Error("Ошибка при обновлении адреса");
+                }
+
+                console.log("Адрес пользователя успешно обновлен.");
+            } else {
+                const addressResponse = await fetch(`${API_BASE_URL}/users/addresses`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(addressData),
+                    credentials: "include",
+                });
+
+                if (addressResponse.status !== 201) {
+                    throw new Error("Ошибка при добавлении адреса");
+                }
+
+                console.log("Адрес пользователя успешно добавлен.");
             }
-
-            console.log("Адрес пользователя успешно обновлен.");
-        } else {
-            const addressResponse = await fetch(`${API_BASE_URL}/users/addresses`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    mail_index: postalCode,
-                    city: city,
-                    street: street,
-                    house: house,
-                    build: building,
-                    apartment: apartment,
-                    is_active: setAsDefault 
-                }),
-                credentials: "include",
-            });
-
-            if (addressResponse.status !== 201) {
-                throw new Error("Ошибка при добавлении адреса");
-            }
-
-            console.log("Адрес пользователя успешно добавлен.");
+        } catch (error) {
+            console.error("Ошибка:", error);
         }
-    } catch (error) {
-        console.error("Ошибка:", error);
     }
-}
-
     async function fetchAddresses() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/addresses`, {

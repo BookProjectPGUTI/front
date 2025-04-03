@@ -135,6 +135,10 @@
             errorMessage = 'Не найдено';
             errorDetails = errorData.details || 'Проверьте заполнили ли вы все шаги на вкладке Начать обмен';
             break;
+          case 409:
+            activeTab = 'active';
+            await checkUserStatus();
+            break;
           case 500:
             errorMessage = 'Ошибка сервера';
             errorDetails = 'Попробуйте позже или обратитесь в поддержку';

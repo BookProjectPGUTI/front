@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";  
-    import { userStore, API_BASE_URL } from '$lib/stores'; 
+    import { userStore, API_BASE_URL, isActive } from '$lib/stores'; 
   
     let activeTab = "exchange";
     let genres: { id: number, name: string }[] = [];
@@ -12,7 +12,9 @@
     let addresses: Array<any> = [];
     let selectedAddress: any = null; 
     let showModal = false;
-    
+    let showSuccessMessage = false;
+    let isConfirmButtonDisabled = false;
+
     let city = "";
     let street = "";
     let building = "";
@@ -451,37 +453,39 @@
     }    
 
     async function confirmAddress() {
-    if (!validateAddressForm()) {
-        return; 
-    }
-    const addressData = {
+        if (!validateAddressForm() || isConfirmButtonDisabled) {
+            return; 
+        }
+        
+        isConfirmButtonDisabled = true; // Блокируем кнопку перед отправкой запроса
+        
+        const addressData = {
             mail_index: postalCode,
             city: city,
             street: street,
             house: house,
-            build: building.trim() ? building : null, // Передаем NULL если building пустой
+            build: building.trim() ? building : null,
             apartment: apartment,
             is_active: setAsDefault 
         };
-    try {
-        const userResponse = await fetch(`${API_BASE_URL}/users`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                second_name: middleName
-            }),
-            credentials: "include",
-        });
+        
+        try {
+            const userResponse = await fetch(`${API_BASE_URL}/users`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    second_name: middleName
+                }),
+                credentials: "include",
+            });
 
-        if (userResponse.status !== 204) {
-            throw new Error("Ошибка при обновлении ФИО");
-        }
+            if (userResponse.status !== 204) {
+                throw new Error("Ошибка при обновлении ФИО");
+            }
 
-        console.log("ФИО пользователя успешно обновлено.");
-
-             if (selectedAddress) {
+            if (selectedAddress) {
                 const addressResponse = await fetch(`${API_BASE_URL}/users/addresses/${selectedAddress.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -492,8 +496,6 @@
                 if (addressResponse.status !== 204) {
                     throw new Error("Ошибка при обновлении адреса");
                 }
-
-                console.log("Адрес пользователя успешно обновлен.");
             } else {
                 const addressResponse = await fetch(`${API_BASE_URL}/users/addresses`, {
                     method: "POST",
@@ -505,11 +507,17 @@
                 if (addressResponse.status !== 201) {
                     throw new Error("Ошибка при добавлении адреса");
                 }
-
-                console.log("Адрес пользователя успешно добавлен.");
             }
+            
+            showSuccessMessage = true;
+            
+            setTimeout(() => {
+                window.location.href = '/my-exchanges';
+            }, 500);
+            
         } catch (error) {
             console.error("Ошибка:", error);
+            isConfirmButtonDisabled = false;
         }
     }
     async function fetchAddresses() {
@@ -572,14 +580,13 @@
 </script>
 
 <main class="container">
-    <nav class="menu">
-        <a href="/" class="menu-item">Главная</a>
-        <!-- svelte-ignore a11y_invalid_attribute -->
-        <a href="#" class="menu-item active">Начать обмен</a>
-        <a href="/my-exchanges" class="menu-item">Мои обмены</a>
-    </nav>
+	<nav class="menu">
+		<a href="/" class="menu-item {isActive('/') ? 'active' : ''}">Главная</a>
+		<a href="/exchange" class="menu-item {isActive('/exchange') ? 'active' : ''}">Начать обмен</a>
+		<a href="/my-exchanges" class="menu-item {isActive('/my-exchanges') ? 'active' : ''}">Мои обмены</a>
+	  </nav>
     <section class="exchange-form">
-        <h2 class="form-title">Бланк обмена</h2>
+        <h1 class="form-title">Бланк обмена</h1>
         <div class="tabs">
             <button on:click={() => showTab('exchange') } class="tab-button {activeTab === 'exchange' ? 'active-tab' : ''}">Хочу обменять</button>
             <button on:click={() => showTab('receive') } class="tab-button {activeTab === 'receive' ? 'active-tab' : ''}">Хочу получить</button>
@@ -768,15 +775,20 @@
             </div>
         </div>
         {/if}
+        {#if showSuccessMessage}
+            <div class="success-message">Данные успешно сохранены</div>
+        {/if}
         <div class="button-container">
             {#if activeTab === 'receive' || activeTab === 'address'}
-                <button class="back-button" on:click={goBack}>&lt;&lt; Назад</button>
+                <button class="back-button" on:click={goBack}>Назад</button>
             {/if}
             {#if activeTab === 'receive' || activeTab === 'exchange'}
-            <button class="next-button" on:click={handleNextButtonClick}>Далее &gt;&gt;</button>
+            <button class="next-button" on:click={handleNextButtonClick}>Далее</button>
             {/if}
             {#if activeTab === 'address'}
-            <button class="next-button" on:click={confirmAddress}>Подтвердить данные</button>
+            <button class="next-button" on:click={confirmAddress} disabled={isConfirmButtonDisabled}>
+                {isConfirmButtonDisabled ? 'Сохранение...' : 'Подтвердить данные'}
+            </button>
             {/if}
         </div>
         {#if showModal}
@@ -886,43 +898,50 @@
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        color:#333;
-        background: #f9f9f9;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+        color: #333;
+      }
+  
     .menu {
         display: flex;
-        gap: 10px;
+        gap: 15px;
         margin-bottom: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
+  
     .menu-item {
-        padding: 10px 15px;
-        background:  #fff;
+        padding: 10px 20px;
+        background: #fff;
         border-radius: 8px;
         text-decoration: none;
         color: #333;
-        border: 2px solid transparent;
-        transition: border-color 0.3s ease, background-color 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
     }
     .menu-item:hover {
-        background: #ccc;
-        border-color: #ccc;
+        background: #f0f0f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
+    .menu-item.active {
+	    background: #00aaff;
+	    color: white;
+	    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	}
     .exchange-form {
         background: #fff;
-        padding: 20px;
+        padding: 15px;
         border-radius: 10px;
-        max-width: 800px;
-        width: 100%;
+        width: 800px;
         position: relative;
-        height: 700px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        height: 750px;
     }
     .form-title {
         text-align: center;
-        font-size: 1.5rem;
         margin-bottom: 20px;
+        color: #2c3e50;
     }
     .tabs {
         display: flex;
@@ -1003,7 +1022,7 @@
         border: 1px solid gray;
         border-radius: 8px;
         padding: 10px;
-        max-height: 180px;
+        max-height: 450px;
         overflow-y: auto;
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
         margin-top: 5px;
@@ -1062,6 +1081,18 @@
         right: 10px;
         bottom: 5px;
     }
+    .success-message {
+        color: green;
+        text-align: center;
+        margin: 20px 0;
+        font-weight: bold;
+        animation: fadeIn 0.5s;
+        }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }    
     .receive-container {
         width: 100%;
         display: flex;
@@ -1081,8 +1112,8 @@
         text-align: left;
     }
     .input-group {
-    display: flex;
-    gap: 10px;
+        display: flex;
+        gap: 10px;
     }
 
     .input-wrapper {

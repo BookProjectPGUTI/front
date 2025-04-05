@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { userStore, API_BASE_URL, isLoginOpen } from '$lib/stores';
+  import { userStore, API_BASE_URL, isLoginOpen, isActive } from '$lib/stores';
   import { onMount } from 'svelte';
   import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -98,23 +98,6 @@
       if (response.ok) {
         const data = await response.json();
         exchangeMakers = data.makers || [];
-        
-        exchangeMakers.sort((a, b) => {
-          const aTakerMatches = a.taker_genre_matches?.length || 0;
-          const bTakerMatches = b.taker_genre_matches?.length || 0;
-          
-          const aMakerMatches = a.maker_genre_matches?.length || 0;
-          const bMakerMatches = b.maker_genre_matches?.length || 0;
-          
-          const aTotalMatches = aTakerMatches + aMakerMatches;
-          const bTotalMatches = bTakerMatches + bMakerMatches;
-          
-          if (bTotalMatches !== aTotalMatches) {
-            return bTotalMatches - aTotalMatches;
-          }
-          
-          return b.user.rating - a.user.rating;
-        });
       } else {
         const errorData = await response.json().catch(() => ({}));
         
@@ -156,7 +139,6 @@
       isLoading = false;
     }
   }
-
 
   async function becomeMaker() {
     if (isMaker) return;
@@ -355,11 +337,11 @@
 </script>
 
 <main class="container">
-  <nav class="menu">
-    <a href="/" class="menu-item">Главная</a>
-    <a href="/exchange" class="menu-item">Начать обмен</a>
-    <a href="/my-exchanges" class="menu-item">Мои обмены</a>
-  </nav>
+	<nav class="menu">
+		<a href="/" class="menu-item {isActive('/') ? 'active' : ''}">Главная</a>
+		<a href="/exchange" class="menu-item {isActive('/exchange') ? 'active' : ''}">Начать обмен</a>
+		<a href="/my-exchanges" class="menu-item {isActive('/my-exchanges') ? 'active' : ''}">Мои обмены</a>
+	  </nav>
 
   <div class="layout">
     <aside class="sidebar">
@@ -513,7 +495,7 @@
                   
                     <div class="user-info">
                       <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
-                      <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
+                      <p class="user-rating">★ {currentUser.rating}</p>
                     </div>
             
                   {#if currentExchange.maker.is_accepted && isMaker && !currentExchange.maker.track_number}
@@ -648,41 +630,49 @@
 </main>
 
 <style>
+  * {
+    box-sizing: border-box;
+  }
   .container {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px;
-    background:  #f9f9f9;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    
+    color: #333;
   }
 
   .menu {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .menu-item {
-        padding: 10px 15px;
-        background:  #fff;
-        border-radius: 8px;
-        text-decoration: none;
-        color: #000000;
-        border: 2px solid transparent;
-        transition: border-color 0.3s ease, background-color 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    .menu-item:hover {
-        background: #ccc;
-        border-color: #ccc;
-    }
+    padding: 10px 20px;
+    background: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  .menu-item:hover {
+    background: #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .menu-item.active {
+	  background: #00aaff;
+	  color: white;
+	  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	}
   .layout {
     display: flex;
-    width: 100%;
-    max-width: 1200px;
+    width: 800px;
+    height: 750px;
     gap: 20px;
   }
 

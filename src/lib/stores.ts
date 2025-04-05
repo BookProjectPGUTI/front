@@ -1,4 +1,18 @@
 import { writable } from 'svelte/store';
+import { page } from '$app/stores';
+
+export const currentPath = {
+  subscribe: page.subscribe,
+  get() {
+      let $path;
+      page.subscribe(p => $path = p.url.pathname)();
+      return $path;
+  }
+};
+
+export function isActive(path: string): boolean {
+  return currentPath.get() === path;
+}
 
 type User = {
     id: string;

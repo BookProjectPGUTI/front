@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";  
+    import { goto } from '$app/navigation';
     import { userStore, API_BASE_URL, isActive } from '$lib/stores'; 
   
     let activeTab = "exchange";
@@ -17,7 +18,7 @@
 
     let city = "";
     let street = "";
-    let building = "";
+    let building: string = "";
     let house = "";
     let apartment = "";
     let postalCode = "";
@@ -175,8 +176,10 @@
         streetError = "Улица должна содержать только кириллицу, пробелы и тире.";
         isValid = false;
     }
+    console.log('Validating:', { building });
 
-    if (building.trim()) {
+    if (!building || typeof building !== 'string' || !building.trim()) {
+    } else {
         if (building.length > 128) {
             buildingError = "Строение не может быть длиннее 128 символов.";
             isValid = false;
@@ -185,6 +188,7 @@
             isValid = false;
         }
     }
+
 
     if (!house.trim()) {
         houseError = "Дом не может быть пустым.";
@@ -464,7 +468,7 @@
             city: city,
             street: street,
             house: house,
-            build: building.trim() ? building : null,
+            build: building && building.trim() ? building : null,
             apartment: apartment,
             is_active: setAsDefault 
         };
@@ -512,8 +516,8 @@
             showSuccessMessage = true;
             
             setTimeout(() => {
-                window.location.href = '/my-exchanges';
-            }, 500);
+                goto('/my-exchanges');
+            }, 1000);
             
         } catch (error) {
             console.error("Ошибка:", error);

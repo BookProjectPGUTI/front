@@ -625,7 +625,7 @@
                     <div>
                         <!-- svelte-ignore a11y_label_has_associated_control -->
                         <label>ISBN</label>
-                        <input type="text" placeholder="9785936732652" bind:value={isbn}>
+                        <input type="text" placeholder="9785936732652" maxlength='13' bind:value={isbn}>
                         {#if isbnError}
                             <div class="error-message">{isbnError}</div>
                         {/if}

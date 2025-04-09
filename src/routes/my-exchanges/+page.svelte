@@ -51,36 +51,64 @@
     };
   });
 
-  async function checkUserStatus() {
-    if (!currentUser) return;
-
-    isLoading = true;
+  async function fetchUserRating(userId: string): Promise<number> {
     try {
-      const response = await fetch(`${API_BASE_URL}/exchanges/current`, {
+      const response = await fetch(`${API_BASE_URL}/users?user_id=${userId}`, {
         credentials: "include",
-        headers: {'Accept': 'application/json'}
+        headers: { 'Accept': 'application/json' }
       });
 
       if (response.ok) {
         const data = await response.json();
-        currentExchange = data;
-        isMaker = data.maker?.user.username === currentUser?.username;
-        isTaker = data.taker?.user.username === currentUser?.username;
-
-        if (currentExchange) {
-          activeTab = 'active';
-        }
-      } else {
-        currentExchange = null;
-        isMaker = false;
-        isTaker = false;
+        return data.rating || 0;
       }
+      return 0;
     } catch (error) {
-      console.error('Ошибка сети:', error);
-    } finally {
-      isLoading = false;
+      console.error('Ошибка при получении рейтинга:', error);
+      return 0;
     }
   }
+
+  async function checkUserStatus() {
+  if (!currentUser) return;
+
+  isLoading = true;
+  try {
+    const response = await fetch(`${API_BASE_URL}/exchanges/current`, {
+      credentials: "include",
+      headers: {'Accept': 'application/json'}
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      currentExchange = data;
+      if (data?.maker?.user?.id) {
+        const makerRating = await fetchUserRating(data.maker.user.id);
+        data.maker.user.rating = makerRating;
+      }
+
+      if (data?.taker?.user?.id) {
+        const takerRating = await fetchUserRating(data.taker.user.id);
+        data.taker.user.rating = takerRating;
+      }
+      currentExchange = data;
+      isMaker = data.maker?.user.username === currentUser?.username;
+      isTaker = data.taker?.user.username === currentUser?.username;
+
+      if (currentExchange && (isMaker || isTaker)) {
+        activeTab = 'active';
+      }
+    } else {
+      currentExchange = null;
+      isMaker = false;
+      isTaker = false;
+    }
+  } catch (error) {
+    console.error('Ошибка сети:', error);
+  } finally {
+    isLoading = false;
+  }
+}
 
   async function fetchExchangeMakers() {
     if (isMaker) return;
@@ -97,7 +125,19 @@
       
       if (response.ok) {
         const data = await response.json();
-        exchangeMakers = data.makers || [];
+        const makersWithRatings = await Promise.all(
+          data.makers.map(async (maker: any) => {
+            const rating = await fetchUserRating(maker.user.id);
+            return {
+              ...maker,
+              user: {
+                ...maker.user,
+                rating: rating
+              }
+            };
+          })
+        );
+        exchangeMakers = makersWithRatings || [];
       } else {
         const errorData = await response.json().catch(() => ({}));
         
@@ -118,17 +158,10 @@
             errorMessage = 'Не найдено';
             errorDetails = errorData.details || 'Проверьте заполнили ли вы все шаги на вкладке Начать обмен';
             break;
-          case 409:
-            activeTab = 'active';
-            await checkUserStatus();
-            break;
           case 500:
             errorMessage = 'Ошибка сервера';
             errorDetails = 'Попробуйте позже или обратитесь в поддержку';
             break;
-          default:
-            errorMessage = 'Ошибка при загрузке';
-            errorDetails = `Код ошибки: ${response.status}`;
         }
       }
     } catch (error) {
@@ -326,7 +359,7 @@
     activeTab = tab;
     isLoading = true;
 
-    if (tab === 'offers' && !isInitialLoad) {
+    if (tab === 'offers') {
       fetchExchangeMakers().finally(() => isLoading = false);
     } else {
       isLoading = false;
@@ -365,10 +398,12 @@
     <section class="content">
       {#if isLoading}
       <p>Загрузка...</p>
-    {:else if errorMessage}
+      {:else if errorMessage}
       <div class="error-notification">
         <h3>{errorMessage}</h3>
-        <p>{errorDetails}</p>
+        <p>
+            {errorDetails}
+        </p>
         
         {#if errorMessage === 'Проблемы с авторизацией'}
           <button class="action-button" on:click={() => isLoginOpen.set(true)}>Войти</button>
@@ -398,17 +433,22 @@
             {/if}
 
             {#if isMaker}
-              {#if currentExchange}
-                <div class="exchange-notification">
-                  <p class="status-message">
-                    Вам предложили обмен.
-                    <!-- svelte-ignore a11y_invalid_attribute -->
-                    <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
-                  </p>
-                </div>
-              {:else}
-                <p class="status-message">Вы стали мейкером, ожидайте предложение на обмен.</p>
-              {/if}
+            {#if currentExchange}
+            <div class="exchange-notification">
+              <p class="status-message">
+                {#if currentExchange.taker}
+                  Вас выбрали на обмен.
+                {:else}
+                  Ожидайте пока вас выберут на обмен.
+                {/if}
+                <!-- svelte-ignore a11y_invalid_attribute -->
+                <a href="#" on:click|preventDefault={() => activeTab = 'active'} class="view-link">Смотреть</a>
+              </p>
+            </div>
+          {:else}
+            <p class="status-message">Вы стали мейкером, ожидайте предложение на обмен.</p>
+          {/if}
+          
             {:else if !isTaker}
               <h3>Доступные варианты для обмена</h3>
               <div class="exchange-list compact">
@@ -495,7 +535,7 @@
                   
                     <div class="user-info">
                       <p class="user-name">{currentExchange.maker.user.first_name} {currentExchange.maker.user.last_name}</p>
-                      <p class="user-rating">★ {currentUser.rating}</p>
+                      <p class="user-rating">★ {currentExchange.maker.user.rating}</p>
                     </div>
             
                   {#if currentExchange.maker.is_accepted && isMaker && !currentExchange.maker.track_number}
